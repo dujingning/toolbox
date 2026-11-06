@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间戳 哈希 密码</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --border:#d9dde3; --accent:#2563eb; --ok:#16a34a; --err:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1d2026; --text:#e6e8ec; --muted:#9aa1ad; --border:#33373f; --accent:#5b8def; --ok:#4ade80; --err:#f87171; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:900px; margin:0 auto; }
+  a.back { color:var(--accent); text-decoration:none; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  h2 { font-size:17px; margin:0 0 12px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; }
+  input[type=text], input[type=number], textarea { padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:transparent; color:inherit; font:inherit; }
+  textarea { width:100%; height:90px; resize:vertical; }
+  input:focus, textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; margin:8px 0; }
+  .row input[type=text] { flex:1; min-width:200px; }
+  button { padding:7px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  label { color:var(--muted); font-size:14px; display:flex; align-items:center; gap:5px; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:6px 4px; border-top:1px solid var(--border); vertical-align:top; }
+  td:first-child { color:var(--muted); width:90px; white-space:nowrap; }
+  td.v { word-break:break-all; }
+  td:last-child { width:56px; text-align:right; }
+  td button { padding:2px 8px; font-size:12px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .err { color:var(--err); }
+  #pw { font-size:18px; letter-spacing:.5px; word-break:break-all; padding:10px; border:1px dashed var(--border); border-radius:8px; min-height:48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← 返回工具集</a>
+  <h1>时间戳 / 哈希 / 密码</h1>
+
+  <!-- 时间戳 -->
+  <section class="card">
+    <h2>时间戳转换</h2>
+    <div class="row muted">当前：<span class="mono" id="nowS"></span> 秒 · <span class="mono" id="nowMs"></span> 毫秒
+      <button id="useNow">填入</button></div>
+    <div class="row">
+      <input type="text" id="ts" class="mono" placeholder="时间戳（自动识别秒 / 毫秒）">
+      <button class="primary" id="tsGo">→ 日期</button>
+    </div>
+    <div class="row">
+      <input type="text" id="dt" class="mono" placeholder="日期，如 2026-11-06 12:30:00">
+      <button class="primary" id="dtGo">→ 时间戳</button>
+    </div>
+    <table id="tsOut"></table>
+  </section>
+
+  <!-- 哈希 -->
+  <section class="card">
+    <h2>哈希计算（UTF-8）</h2>
+    <textarea id="hin" class="mono" placeholder="输入文本，实时计算" spellcheck="false"></textarea>
+    <div class="row"><label><input type="checkbox" id="upper"> 大写</label></div>
+    <table id="hout"></table>
+  </section>
+
+  <!-- 密码 -->
+  <section class="card">
+    <h2>随机密码</h2>
+    <div class="row">
+      <label>长度 <input type="number" id="len" value="16" min="4" max="128" style="width:80px"></label>
+      <label><input type="checkbox" id="cU" checked> A-Z</label>
+      <label><input type="checkbox" id="cL" checked> a-z</label>
+      <label><input type="checkbox" id="cD" checked> 0-9</label>
+      <label><input type="checkbox" id="cS" checked> 符号</label>
+      <label><input type="checkbox" id="cX"> 排除易混淆字符（0O1lI）</label>
+    </div>
+    <div id="pw" class="mono"></div>
+    <div class="row">
+      <button class="primary" id="gen">重新生成</button>
+      <button id="pwCopy">复制</button>
+      <span class="muted" id="pwInfo"></span>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+async function copyText(t, btn) {
+  try { await navigator.clipboard.writeText(t); }
+  catch { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove(); }
+  if (btn) { const o = btn.textContent; btn.textContent = "✓"; setTimeout(() => btn.textContent = o, 1000); }
+}
+function table(el, rows) {
+  el.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="v mono">${esc(v)}</td><td><button data-v="${esc(v)}">复制</button></td></tr>`).join("");
+}
+document.addEventListener("click", e => { const b = e.target.closest("td button"); if (b) copyText(b.dataset.v, b); });
+
+/* ---------- 时间戳 ---------- */
+const pad = n => String(n).padStart(2, "0");
+const fmtLocal = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+function tick() { const n = Date.now(); $("nowS").textContent = Math.floor(n / 1000); $("nowMs").textContent = n; }
+tick(); setInterval(tick, 1000);
+
+function showDate(d, note) {
+  if (isNaN(d)) { $("tsOut").innerHTML = `<tr><td colspan="3" class="err">无法识别的输入</td></tr>`; return; }
+  const ms = d.getTime(), diff = Math.round((ms - Date.now()) / 1000);
+  const rel = Math.abs(diff) < 60 ? "刚刚" : (() => {
+    const a = Math.abs(diff), [n, u] = a < 3600 ? [a / 60, "分钟"] : a < 86400 ? [a / 3600, "小时"] : a < 86400 * 365 ? [a / 86400, "天"] : [a / 86400 / 365, "年"];
+    return `${Math.floor(n)} ${u}${diff < 0 ? "前" : "后"}`;
+  })();
+  table($("tsOut"), [
+    ["本地时间", fmtLocal(d)], ["UTC", d.toISOString().replace("T", " ").replace(".000Z", "Z")], ["ISO 8601", d.toISOString()],
+    ["秒", Math.floor(ms / 1000)], ["毫秒", ms], ["相对", rel + (note ? `（${note}）` : "")]]);
+}
+$("tsGo").onclick = () => {
+  const s = $("ts").value.trim();
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return showDate(new Date(NaN));
+  const n = +s, isMs = Math.abs(n) >= 1e11; // 1e11 秒 ≈ 公元 5138 年，以此区分秒/毫秒
+  showDate(new Date(isMs ? n : n * 1000), isMs ? "按毫秒解析" : "按秒解析");
+};
+$("dtGo").onclick = () => {
+  const s = $("dt").value.trim();
+  // 不带时区的 "YYYY-MM-DD HH:mm:ss" 按本地时间解析
+  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/.exec(s);
+  showDate(m ? new Date(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)) : new Date(s));
+};
+$("useNow").onclick = () => { $("ts").value = $("nowS").textContent; $("dt").value = fmtLocal(new Date()); $("tsGo").click(); };
+$("ts").addEventListener("keydown", e => e.key === "Enter" && $("tsGo").click());
+$("dt").addEventListener("keydown", e => e.key === "Enter" && $("dtGo").click());
+$("useNow").click();
+
+/* ---------- 哈希 ---------- */
+function md5(bytes) {
+  const K = Array.from({ length: 64 }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32) | 0);
+  const S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  const len = bytes.length, total = ((len + 8) >> 6 << 6) + 64;
+  const buf = new Uint8Array(total); buf.set(bytes); buf[len] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(total - 8, (len * 8) >>> 0, true); dv.setUint32(total - 4, Math.floor(len / 0x20000000), true);
+  let a0 = 0x67452301, b0 = 0xefcdab89 | 0, c0 = 0x98badcfe | 0, d0 = 0x10325476;
+  for (let off = 0; off < total; off += 64) {
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + dv.getUint32(off + g * 4, true)) | 0;
+      const s = S[(i >> 4) * 4 + (i & 3)];
+      A = D; D = C; C = B; B = (B + ((F << s) | (F >>> (32 - s)))) | 0;
+    }
+    a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+  }
+  const out = new DataView(new ArrayBuffer(16));
+  [a0, b0, c0, d0].forEach((v, i) => out.setUint32(i * 4, v, true));
+  return [...new Uint8Array(out.buffer)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+let hashSeq = 0;
+async function hashAll() {
+  const seq = ++hashSeq, bytes = new TextEncoder().encode($("hin").value);
+  const rows = [["MD5", md5(bytes)]];
+  if (crypto.subtle) {
+    for (const alg of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) rows.push([alg, hex(await crypto.subtle.digest(alg, bytes))]);
+  } else rows.push(["SHA", "当前环境不支持 Web Crypto"]);
+  if (seq !== hashSeq) return; // 丢弃过期结果
+  const up = $("upper").checked;
+  table($("hout"), rows.map(([k, v]) => [k, up && !v.includes("不支持") ? v.toUpperCase() : v]));
+}
+$("hin").addEventListener("input", hashAll);
+$("upper").addEventListener("change", hashAll);
+hashAll();
+
+/* ---------- 密码 ---------- */
+const SETS = { cU: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", cL: "abcdefghijklmnopqrstuvwxyz", cD: "0123456789", cS: "!@#$%^&*()-_=+[]{};:,.<>?/~" };
+const randInt = n => { // 拒绝采样，避免取模偏差
+  const lim = Math.floor(0x100000000 / n) * n, a = new Uint32Array(1);
+  do crypto.getRandomValues(a); while (a[0] >= lim);
+  return a[0] % n;
+};
+function gen() {
+  const len = Math.max(4, Math.min(128, +$("len").value || 16));
+  const strip = s => $("cX").checked ? s.replace(/[0O1lI]/g, "") : s;
+  const groups = Object.keys(SETS).filter(k => $(k).checked).map(k => strip(SETS[k]));
+  if (!groups.length) { $("pw").textContent = ""; $("pwInfo").textContent = "请至少选择一种字符"; return; }
+  const all = groups.join("");
+  const chars = groups.map(g => g[randInt(g.length)]); // 每类至少一个
+  while (chars.length < len) chars.push(all[randInt(all.length)]);
+  for (let i = chars.length - 1; i > 0; i--) { const j = randInt(i + 1); [chars[i], chars[j]] = [chars[j], chars[i]]; }
+  $("pw").textContent = chars.join("");
+  $("pwInfo").textContent = `约 ${Math.round(len * Math.log2(all.length))} 位熵`;
+}
+["len", "cU", "cL", "cD", "cS", "cX"].forEach(id => $(id).addEventListener("input", gen));
+$("gen").onclick = gen;
+$("pwCopy").onclick = e => $("pw").textContent && copyText($("pw").textContent, e.target);
+gen();
+</script>
+</body>
+</html>

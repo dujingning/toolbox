@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON 格式化</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --border:#d9dde3; --accent:#2563eb; --ok:#16a34a; --err:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1d2026; --text:#e6e8ec; --muted:#9aa1ad; --border:#33373f; --accent:#5b8def; --ok:#4ade80; --err:#f87171; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  a.back { color:var(--accent); text-decoration:none; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+  textarea { width:100%; height:420px; resize:vertical; padding:10px; border:1px solid var(--border); border-radius:8px;
+             background:var(--card); color:inherit; font:13px/1.5 ui-monospace,Menlo,Consolas,monospace; tab-size:2; }
+  textarea:focus, select:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin:0 0 12px; }
+  button, select { padding:7px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  label { color:var(--muted); font-size:14px; display:flex; align-items:center; gap:6px; }
+  #msg { font-size:14px; min-height:21px; margin-top:8px; white-space:pre-wrap; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← 返回工具集</a>
+  <h1>JSON 格式化 / 校验</h1>
+  <div class="bar">
+    <button class="primary" id="fmt">格式化</button>
+    <button id="min">压缩</button>
+    <button id="check">校验</button>
+    <label>缩进 <select id="indent"><option value="2">2 空格</option><option value="4">4 空格</option><option value="tab">Tab</option></select></label>
+    <label><input type="checkbox" id="sort"> 键排序</label>
+    <button id="copy">复制结果</button>
+    <button id="clear">清空</button>
+  </div>
+  <div class="grid">
+    <textarea id="in" placeholder='粘贴 JSON，例如 {"name":"张三","age":18}' spellcheck="false" autofocus></textarea>
+    <textarea id="out" placeholder="结果" spellcheck="false" readonly></textarea>
+  </div>
+  <div id="msg"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const msg = (t, cls) => { $("msg").textContent = t; $("msg").className = cls || ""; };
+
+// 计算出错位置的行列号（兼容不同浏览器的报错格式）
+function locate(text, e) {
+  const m = /position (\d+)/i.exec(e.message);
+  if (!m) return "";
+  const pos = +m[1], before = text.slice(0, pos), line = before.split("\n").length;
+  const col = pos - before.lastIndexOf("\n");
+  const src = text.split("\n")[line - 1] || "";
+  return `\n第 ${line} 行，第 ${col} 列：\n${src}\n${" ".repeat(Math.max(0, col - 1))}^`;
+}
+const sortKeys = v => Array.isArray(v) ? v.map(sortKeys)
+  : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sortKeys(v[k])])) : v;
+
+function parse() {
+  const text = $("in").value;
+  if (!text.trim()) { msg("请输入 JSON", "err"); return undefined; }
+  try { const v = JSON.parse(text); return $("sort").checked ? sortKeys(v) : v; }
+  catch (e) { msg("✗ 语法错误：" + e.message + locate(text, e), "err"); return undefined; }
+}
+function run(space) {
+  const v = parse(); if (v === undefined) return;
+  $("out").value = JSON.stringify(v, null, space);
+  msg(`✓ 合法 JSON · 输出 ${$("out").value.length} 字符`, "ok");
+}
+$("fmt").onclick = () => { const i = $("indent").value; run(i === "tab" ? "\t" : +i); };
+$("min").onclick = () => run(0);
+$("check").onclick = () => { if (parse() !== undefined) msg("✓ 合法 JSON", "ok"); };
+$("clear").onclick = () => { $("in").value = $("out").value = ""; msg(""); $("in").focus(); };
+$("copy").onclick = async () => {
+  if (!$("out").value) return;
+  try { await navigator.clipboard.writeText($("out").value); msg("已复制到剪贴板", "ok"); }
+  catch { $("out").select(); document.execCommand("copy"); msg("已复制到剪贴板", "ok"); }
+};
+// Ctrl/Cmd + Enter 快速格式化
+$("in").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("fmt").click(); });
+</script>
+</body>
+</html>

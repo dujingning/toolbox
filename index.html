@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在线工具集</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --border:#d9dde3; --accent:#2563eb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1d2026; --text:#e6e8ec; --muted:#9aa1ad; --border:#33373f; --accent:#5b8def; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:32px 16px; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:880px; margin:0 auto; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 20px; }
+  input { width:100%; padding:10px 12px; margin-bottom:16px; border:1px solid var(--border); border-radius:8px;
+          background:var(--card); color:inherit; font:inherit; }
+  input:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  a.tool { display:block; padding:16px; background:var(--card); border:1px solid var(--border); border-radius:12px;
+           color:inherit; text-decoration:none; transition:border-color .15s, transform .15s; }
+  a.tool:hover, a.tool:focus-visible { border-color:var(--accent); transform:translateY(-2px); outline:none; }
+  .ico { font-size:26px; }
+  .name { font-weight:600; margin-top:6px; }
+  .desc { color:var(--muted); font-size:13px; }
+  .empty { color:var(--muted); display:none; text-align:center; margin-top:24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>在线工具集</h1>
+  <p class="sub">全部在浏览器本地运行，无需联网，数据不会上传。</p>
+  <input id="q" type="search" placeholder="搜索工具…" autofocus>
+  <div class="grid">
+    <a class="tool" href="tools/qrcode.html" data-k="二维码 qr qrcode 文本"><div class="ico">▦</div><div class="name">文本转二维码</div><div class="desc">生成二维码，支持中文，下载 PNG / SVG</div></a>
+    <a class="tool" href="tools/json.html" data-k="json 格式化 校验 压缩"><div class="ico">{ }</div><div class="name">JSON 格式化 / 校验</div><div class="desc">美化、压缩、检查语法错误</div></a>
+    <a class="tool" href="tools/base64-url.html" data-k="base64 url 编码 解码"><div class="ico">⇄</div><div class="name">Base64 / URL 编解码</div><div class="desc">支持中文 UTF-8 与 URL-safe</div></a>
+    <a class="tool" href="tools/misc.html" data-k="时间戳 timestamp 哈希 hash md5 sha 密码 随机"><div class="ico">⚙</div><div class="name">时间戳 / 哈希 / 密码</div><div class="desc">时间戳互转、MD5 / SHA、随机密码生成</div></a>
+  </div>
+  <p class="empty" id="empty">没有匹配的工具</p>
+</div>
+<script>
+  const q = document.getElementById("q"), cards = [...document.querySelectorAll("a.tool")];
+  q.addEventListener("input", () => {
+    const k = q.value.trim().toLowerCase(); let n = 0;
+    cards.forEach(c => { const hit = !k || (c.textContent + " " + c.dataset.k).toLowerCase().includes(k); c.style.display = hit ? "" : "none"; n += hit; });
+    document.getElementById("empty").style.display = n ? "none" : "block";
+  });
+</script>
+</body>
+</html>

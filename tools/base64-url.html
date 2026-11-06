@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Base64 URL 编解码</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --border:#d9dde3; --accent:#2563eb; --ok:#16a34a; --err:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1d2026; --text:#e6e8ec; --muted:#9aa1ad; --border:#33373f; --accent:#5b8def; --ok:#4ade80; --err:#f87171; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:900px; margin:0 auto; }
+  a.back { color:var(--accent); text-decoration:none; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  textarea { width:100%; height:180px; resize:vertical; padding:10px; border:1px solid var(--border); border-radius:8px;
+             background:var(--card); color:inherit; font:13px/1.5 ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+  textarea:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin:12px 0; }
+  .sep { width:1px; height:24px; background:var(--border); }
+  button { padding:7px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  label { color:var(--muted); font-size:14px; display:flex; align-items:center; gap:6px; }
+  #msg { font-size:14px; min-height:21px; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← 返回工具集</a>
+  <h1>Base64 / URL 编解码</h1>
+  <textarea id="in" placeholder="输入要编码或解码的内容" spellcheck="false" autofocus></textarea>
+  <div class="bar">
+    <button class="primary" id="b64e">Base64 编码</button>
+    <button class="primary" id="b64d">Base64 解码</button>
+    <label><input type="checkbox" id="safe"> URL-safe（- _ 无 =）</label>
+    <span class="sep"></span>
+    <button id="urle">URL 编码</button>
+    <button id="urld">URL 解码</button>
+    <label><input type="checkbox" id="full"> 整个 URL（保留 :/?&amp;=）</label>
+    <span class="sep"></span>
+    <button id="swap">↑ 结果作为输入</button>
+    <button id="copy">复制结果</button>
+  </div>
+  <textarea id="out" placeholder="结果" spellcheck="false" readonly></textarea>
+  <div id="msg"></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const msg = (t, cls) => { $("msg").textContent = t; $("msg").className = cls || ""; };
+
+function b64encode(str, safe) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  let s = btoa(bin);
+  if (safe) s = s.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return s;
+}
+function b64decode(s) {
+  s = s.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+  if (s.length % 4 === 1) throw new Error("长度不正确");
+  s += "=".repeat((4 - s.length % 4) % 4);
+  const bin = atob(s), bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+function act(fn, name) {
+  try { $("out").value = fn($("in").value); msg(`✓ ${name}完成 · ${$("out").value.length} 字符`, "ok"); }
+  catch (e) { $("out").value = ""; msg(`✗ ${name}失败：${e.message.includes("utf-8") || e.name === "TypeError" ? "结果不是有效的 UTF-8 文本" : e.message.includes("decode") || e.name === "InvalidCharacterError" ? "输入不是有效的 Base64" : e.message}`, "err"); }
+}
+$("b64e").onclick = () => act(s => b64encode(s, $("safe").checked), "Base64 编码");
+$("b64d").onclick = () => act(b64decode, "Base64 解码");
+$("urle").onclick = () => act(s => $("full").checked ? encodeURI(s) : encodeURIComponent(s), "URL 编码");
+$("urld").onclick = () => act(s => { try { return decodeURIComponent(s.replace(/\+/g, " ")); } catch { throw new Error("输入包含无效的 % 转义序列"); } }, "URL 解码");
+$("swap").onclick = () => { $("in").value = $("out").value; $("out").value = ""; msg(""); };
+$("copy").onclick = async () => {
+  if (!$("out").value) return;
+  try { await navigator.clipboard.writeText($("out").value); }
+  catch { $("out").select(); document.execCommand("copy"); }
+  msg("已复制到剪贴板", "ok");
+};
+</script>
+</body>
+</html>
