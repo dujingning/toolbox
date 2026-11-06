@@ -65,6 +65,7 @@ a { color:var(--link); }
 .row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
 .grow { flex:1; min-width:0; }
 .grid-2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; }
+.grid-2 > .card + .card { margin-top:0; } /* 网格内用 gap 控制间距，避免并排卡片错位 */
 @media (max-width:760px) { .grid-2 { grid-template-columns:minmax(0,1fr); } .container { padding-top:18px; } .page-head h1 { font-size:21px; } }
 .muted { color:var(--muted); }
 .small { font-size:13px; }

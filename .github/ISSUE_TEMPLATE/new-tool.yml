@@ -1,0 +1,34 @@
+name: 新工具建议
+description: 想要一个新工具，或给现有工具加功能
+title: "[建议] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: 感谢你的建议！工具集只收录可以完全在浏览器本地运行的工具（不联网、不上传数据）。
+  - type: input
+    id: name
+    attributes:
+      label: 工具名称
+      placeholder: 例如：正则表达式测试
+    validations:
+      required: true
+  - type: textarea
+    id: usage
+    attributes:
+      label: 使用场景
+      description: 你会在什么情况下用到它？现在是怎么解决的？
+    validations:
+      required: true
+  - type: textarea
+    id: features
+    attributes:
+      label: 期望的功能
+      description: 列出你最需要的几项功能即可，可以附上参考网站或截图。
+  - type: checkboxes
+    id: offline
+    attributes:
+      label: 确认
+      options:
+        - label: 这个工具不需要调用外部接口，可以在浏览器本地完成
+          required: false
