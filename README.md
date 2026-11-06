@@ -17,7 +17,7 @@
 
 <p>
   <a href="https://dujingning.github.io/toolbox/"><img src="https://img.shields.io/website?url=https%3A%2F%2Fdujingning.github.io%2Ftoolbox%2F&style=flat-square&label=%E5%9C%A8%E7%BA%BF%E8%AE%BF%E9%97%AE&up_message=%E6%AD%A3%E5%B8%B8&down_message=%E7%A6%BB%E7%BA%BF" alt="在线访问状态"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/dujingning/toolbox?style=flat-square&label=%E8%AE%B8%E5%8F%AF%E8%AF%81" alt="MIT 许可证"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF%E8%AF%81-MIT-2563eb?style=flat-square" alt="MIT 许可证"></a>
   <img src="https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-16a34a?style=flat-square" alt="零依赖">
   <a href="https://github.com/dujingning/toolbox/commits/main"><img src="https://img.shields.io/github/last-commit/dujingning/toolbox?style=flat-square&label=%E6%9C%80%E8%BF%91%E6%9B%B4%E6%96%B0" alt="最近更新"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-16a34a?style=flat-square" alt="欢迎 PR"></a>
