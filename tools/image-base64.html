@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片转 Base64</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --border:#d9dde3; --accent:#2563eb; --ok:#16a34a; --err:#dc2626; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14161a; --card:#1d2026; --text:#e6e8ec; --muted:#9aa1ad; --border:#33373f; --accent:#5b8def; --ok:#4ade80; --err:#f87171; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px; background:var(--bg); color:var(--text);
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; }
+  a.back { color:var(--accent); text-decoration:none; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .tabs button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+  button, select { padding:7px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  input[type=number] { width:90px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:transparent; color:inherit; font:inherit; }
+  label { color:var(--muted); font-size:14px; display:flex; align-items:center; gap:6px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin:10px 0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; }
+  .err { color:var(--err); font-size:13px; }
+  #drop { border:2px dashed var(--border); border-radius:10px; padding:28px; text-align:center; color:var(--muted); cursor:pointer; }
+  #drop.over { border-color:var(--accent); color:var(--accent); }
+  .item { display:grid; grid-template-columns:160px 1fr; gap:16px; }
+  @media (max-width:640px) { .item { grid-template-columns:1fr; } }
+  .thumb { width:160px; height:160px; border-radius:8px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; overflow:hidden;
+           background:repeating-conic-gradient(#0000000f 0 25%, transparent 0 50%) 0 0/14px 14px; }
+  .thumb img { max-width:100%; max-height:100%; }
+  .name { font-weight:600; word-break:break-all; }
+  .seg { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
+  .seg button { padding:3px 10px; font-size:13px; }
+  .seg button.on { border-color:var(--accent); color:var(--accent); }
+  textarea { width:100%; height:110px; resize:vertical; padding:8px; border:1px solid var(--border); border-radius:8px; background:transparent; color:inherit; word-break:break-all; }
+  .warn { color:#d97706; font-size:13px; }
+  #decPreview { max-width:100%; max-height:400px; display:none; margin-top:12px; border-radius:8px; border:1px solid var(--border);
+                background:repeating-conic-gradient(#0000000f 0 25%, transparent 0 50%) 0 0/14px 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← 返回工具集</a>
+  <h1>图片转 Base64</h1>
+  <div class="tabs" role="tablist">
+    <button class="on" data-tab="enc">图片 → Base64</button>
+    <button data-tab="dec">Base64 → 图片</button>
+  </div>
+
+  <div id="enc">
+    <section class="card">
+      <div id="drop" tabindex="0">点击选择、拖入图片（可多张），或直接 Ctrl+V 粘贴截图</div>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+      <div class="row">
+        <label>输出格式 <select id="fmt">
+          <option value="orig">保持原格式</option><option value="image/png">PNG</option>
+          <option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></label>
+        <label>质量 <input type="number" id="q" value="85" min="10" max="100"> %</label>
+        <label>最大宽度 <input type="number" id="maxW" placeholder="不限" min="1"> px</label>
+        <button id="clearAll">清空</button>
+      </div>
+      <div class="muted">选「保持原格式」时直接编码原文件（SVG、GIF 动图都原样保留）；其余选项会在本地重新编码，可用来压缩体积。</div>
+    </section>
+    <div id="list"></div>
+  </div>
+
+  <div id="dec" hidden>
+    <section class="card">
+      <textarea id="decIn" class="mono" style="height:180px" placeholder="粘贴 data:image/...;base64,... 或纯 Base64 字符串" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="primary" id="decGo">预览</button>
+        <button id="decDl" disabled>下载图片</button>
+        <span id="decInfo" class="muted"></span>
+      </div>
+      <img id="decPreview" alt="解码预览">
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const size = n => n < 1024 ? n + " B" : n < 1048576 ? (n / 1024).toFixed(1) + " KB" : (n / 1048576).toFixed(2) + " MB";
+const EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg", "image/bmp": "bmp", "image/x-icon": "ico", "image/avif": "avif" };
+
+/* ---------- 标签页 ---------- */
+document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-tab]").forEach(x => x.classList.toggle("on", x === b));
+  $("enc").hidden = b.dataset.tab !== "enc"; $("dec").hidden = b.dataset.tab !== "dec";
+});
+
+/* ---------- 编码 ---------- */
+const files = []; // { file, dataUrl, w, h }
+const readAsDataURL = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+const loadImg = src => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("无法解码图片")); i.src = src; });
+
+async function encode(entry) {
+  const { file } = entry, fmt = $("fmt").value, maxW = +$("maxW").value || 0;
+  const orig = await readAsDataURL(file);
+  const img = await loadImg(orig).catch(() => null);
+  entry.w = img ? img.naturalWidth : 0; entry.h = img ? img.naturalHeight : 0;
+  if (fmt === "orig" && !(maxW && img && img.naturalWidth > maxW)) { entry.dataUrl = orig; entry.outW = entry.w; entry.outH = entry.h; return; }
+  if (!img) throw new Error("无法解码图片，只能保持原格式");
+  const scale = maxW && img.naturalWidth > maxW ? maxW / img.naturalWidth : 1;
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.round(img.naturalWidth * scale)); cv.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = cv.getContext("2d");
+  const type = fmt === "orig" ? (["image/png", "image/jpeg", "image/webp"].includes(file.type) ? file.type : "image/png") : fmt;
+  if (type === "image/jpeg") { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height); } // JPEG 无透明，垫白底
+  ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  entry.dataUrl = cv.toDataURL(type, Math.min(1, Math.max(0.1, (+$("q").value || 85) / 100)));
+  entry.outW = cv.width; entry.outH = cv.height;
+}
+
+const FORMS = {
+  "Data URI": e => e.dataUrl,
+  "纯 Base64": e => e.dataUrl.slice(e.dataUrl.indexOf(",") + 1),
+  "CSS": e => `background-image: url("${e.dataUrl}");`,
+  "HTML": e => `<img src="${e.dataUrl}" width="${e.outW}" height="${e.outH}" alt="">`,
+  "Markdown": e => `![image](${e.dataUrl})`,
+};
+
+function render() {
+  $("list").innerHTML = files.map((e, i) => {
+    if (e.error) return `<section class="card"><div class="name">${esc(e.file.name)}</div><div class="err">${esc(e.error)}</div></section>`;
+    if (!e.dataUrl) return `<section class="card muted">处理中：${esc(e.file.name)}…</section>`;
+    const b64len = e.dataUrl.length - e.dataUrl.indexOf(",") - 1;
+    const mime = e.dataUrl.slice(5, e.dataUrl.indexOf(";"));
+    const form = e.form || "Data URI", text = FORMS[form](e);
+    return `<section class="card item">
+      <div class="thumb"><img src="${e.dataUrl}" alt=""></div>
+      <div>
+        <div class="name">${esc(e.file.name)}</div>
+        <div class="muted">${e.w}×${e.h}${e.outW !== e.w ? ` → ${e.outW}×${e.outH}` : ""} · ${mime} · 原文件 ${size(e.file.size)} · Base64 ${size(b64len)}</div>
+        ${e.dataUrl.length > 2e6 ? '<div class="warn">⚠ 编码结果超过 2MB，嵌入网页会明显拖慢加载，建议压缩或改用文件链接</div>' : ""}
+        <div class="seg">${Object.keys(FORMS).map(k => `<button data-form="${k}" data-i="${i}" class="${k === form ? "on" : ""}">${k}</button>`).join("")}</div>
+        <textarea class="mono" readonly>${esc(text.length > 300000 ? text.slice(0, 300000) + "…（内容过长仅预览前 30 万字符，复制可得完整内容）" : text)}</textarea>
+        <div class="row"><button class="primary" data-copy="${i}">复制</button><button data-dl="${i}">下载图片</button><button data-rm="${i}">移除</button></div>
+      </div></section>`;
+  }).join("");
+}
+
+async function addFiles(list) {
+  const imgs = [...list].filter(f => f.type.startsWith("image/"));
+  for (const file of imgs) {
+    const entry = { file }; files.push(entry); render();
+    try { await encode(entry); } catch (err) { entry.error = err.message; }
+    render();
+  }
+}
+async function reencodeAll() {
+  for (const e of files) { if (e.error && !e.dataUrl) continue; try { e.error = null; await encode(e); } catch (err) { e.error = err.message; } }
+  render();
+}
+["fmt", "q", "maxW"].forEach(id => $(id).addEventListener("change", reencodeAll));
+
+$("drop").onclick = () => $("file").click();
+$("drop").onkeydown = e => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), $("file").click());
+$("file").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+["dragover", "dragenter"].forEach(t => $("drop").addEventListener(t, e => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach(t => $("drop").addEventListener(t, () => $("drop").classList.remove("over")));
+$("drop").addEventListener("drop", e => { e.preventDefault(); addFiles(e.dataTransfer.files); });
+document.addEventListener("paste", e => {
+  if (!$("dec").hidden) return; // 解码页里允许正常粘贴文本
+  const imgs = [...(e.clipboardData?.items || [])].filter(i => i.type.startsWith("image/")).map(i => {
+    const f = i.getAsFile(); return new File([f], f.name && f.name !== "image.png" ? f.name : `粘贴图片-${Date.now()}.${EXT[f.type] || "png"}`, { type: f.type });
+  });
+  if (imgs.length) { e.preventDefault(); addFiles(imgs); }
+});
+$("clearAll").onclick = () => { files.length = 0; render(); };
+
+function downloadDataUrl(url, name) {
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
+  const o = btn.textContent; btn.textContent = "已复制 ✓"; setTimeout(() => btn.textContent = o, 1200);
+}
+$("list").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.form) { files[d.i].form = d.form; render(); }
+  else if (d.copy) { const en = files[d.copy]; copy(FORMS[en.form || "Data URI"](en), b); }
+  else if (d.dl) {
+    const en = files[d.dl], mime = en.dataUrl.slice(5, en.dataUrl.indexOf(";"));
+    downloadDataUrl(en.dataUrl, en.file.name.replace(/\.[^.]+$/, "") + "." + (EXT[mime] || "img"));
+  }
+  else if (d.rm) { files.splice(+d.rm, 1); render(); }
+});
+
+/* ---------- 解码 ---------- */
+// 根据文件头识别图片类型（纯 Base64 没有 MIME 时使用）
+function sniff(b64) {
+  const h = atob(b64.slice(0, 24));
+  if (h.startsWith("\x89PNG")) return "image/png";
+  if (h.startsWith("\xff\xd8")) return "image/jpeg";
+  if (h.startsWith("GIF8")) return "image/gif";
+  if (h.startsWith("RIFF") && h.slice(8, 12) === "WEBP") return "image/webp";
+  if (h.startsWith("BM")) return "image/bmp";
+  if (h.startsWith("\0\0\1\0")) return "image/x-icon";
+  if (/^\s*<(\?xml|svg)/i.test(h)) return "image/svg+xml";
+  return "image/png";
+}
+let decUrl = "";
+$("decGo").onclick = () => {
+  let s = $("decIn").value.trim().replace(/^url\(["']?|["']?\)$/g, "");
+  const info = $("decInfo"), img = $("decPreview");
+  img.style.display = "none"; $("decDl").disabled = true;
+  if (!s) { info.textContent = ""; return; }
+  try {
+    let mime;
+    const m = /^data:([^;,]+)?(;[^,]*)?,/.exec(s);
+    if (m) { mime = m[1] || "image/png"; s = s.slice(m[0].length); }
+    s = s.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    s += "=".repeat((4 - s.length % 4) % 4);
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(s)) throw new Error("包含非 Base64 字符");
+    mime = mime || sniff(s);
+    decUrl = `data:${mime};base64,${s}`;
+    img.onload = () => { info.className = "muted"; info.textContent = `${img.naturalWidth}×${img.naturalHeight} · ${mime} · ${size(Math.floor(s.length * 3 / 4) - (s.match(/=+$/)?.[0].length || 0))}`; img.style.display = "block"; $("decDl").disabled = false; };
+    img.onerror = () => { info.className = "err"; info.textContent = "✗ 无法解码为图片，请检查内容是否完整"; };
+    img.src = decUrl;
+  } catch (e) { info.className = "err"; info.textContent = "✗ " + e.message; }
+};
+$("decIn").addEventListener("input", () => { clearTimeout($("decIn")._t); $("decIn")._t = setTimeout(() => $("decGo").click(), 300); });
+$("decDl").onclick = () => downloadDataUrl(decUrl, "image." + (EXT[decUrl.slice(5, decUrl.indexOf(";"))] || "png"));
+</script>
+</body>
+</html>

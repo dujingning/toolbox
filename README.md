@@ -8,6 +8,8 @@
 | JSON 格式化 / 校验 | `tools/json.html` | 美化、压缩、键排序，语法错误定位到行列 |
 | Base64 / URL 编解码 | `tools/base64-url.html` | UTF-8 安全，支持 URL-safe Base64 |
 | 时间戳 / 哈希 / 密码 | `tools/misc.html` | 秒 / 毫秒自动识别，MD5 / SHA-1 / SHA-256 / SHA-384 / SHA-512，安全随机密码 |
+| 颜色转换 / 取色 | `tools/color.html` | HEX / RGB / HSL / HSV / CMYK 互转，屏幕吸管（Chrome / Edge）与图片取色，色阶与配色，WCAG 对比度检查 |
+| 图片转 Base64 | `tools/image-base64.html` | 批量转 Data URI / CSS / HTML / Markdown，可转格式、压缩、限宽；支持 Base64 还原为图片 |
 
 ## 使用
 
