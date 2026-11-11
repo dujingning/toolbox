@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>在线工具集</title>
-<meta name="description" content="纯前端离线小工具集：二维码、JSON、Base64、时间戳、哈希、密码、颜色、图片转 Base64。不联网、不上传。">
+<meta name="description" content="纯前端离线小工具集：二维码、JSON、Base64、时间戳、哈希、密码、颜色、图片转 Base64，另附小游戏。不联网、不上传。">
 <style>
 /* @shared-css:start */
 /* 工具集公共样式。修改后运行 python3 scripts/sync_shared.py 同步到所有页面 */
@@ -173,6 +173,9 @@ a.tool:hover, a.tool:focus-visible, a.tool.first { border-color:var(--accent); b
 .tool .desc { color:var(--muted); font-size:13px; line-height:1.5; }
 .tool .go { position:absolute; top:20px; right:18px; color:var(--muted); opacity:0; transition:.15s; }
 a.tool:hover .go, a.tool.first .go { opacity:1; color:var(--link); transform:translateX(2px); }
+.sec { display:flex; align-items:baseline; gap:10px; margin:28px 0 12px; font-size:18px; letter-spacing:-.01em; }
+.sec small { font-size:13px; font-weight:400; color:var(--muted); }
+.sec:first-of-type { margin-top:8px; }
 .empty { text-align:center; color:var(--muted); padding:40px 0; }
 footer { margin-top:40px; text-align:center; color:var(--muted); font-size:13px; }
 footer a { color:inherit; }
@@ -342,19 +345,29 @@ const TB = (() => {
     <p>常用的开发与日常小工具，全部在浏览器本地运行，不联网、不上传任何数据。</p>
     <div class="search" role="search">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" id="q" placeholder="搜索工具，如：二维码、json、md5" aria-label="搜索工具" autocomplete="off" data-autofocus>
+      <input type="search" id="q" placeholder="搜索，如：二维码、json、md5、游戏" aria-label="搜索工具或游戏" autocomplete="off" data-autofocus>
       <span class="kbd" aria-hidden="true">/</span>
     </div>
   </section>
+  <h2 class="sec" id="h-tools">工具</h2>
   <div class="tools" id="grid"></div>
-  <p class="empty" id="empty" hidden>没有找到匹配的工具，换个关键词试试</p>
+  <h2 class="sec" id="h-games">小游戏 <small>休息一下，同样纯本地运行</small></h2>
+  <div class="tools" id="games"></div>
+  <p class="empty" id="empty" hidden>没有找到匹配的内容，换个关键词试试</p>
   <footer>开源项目 · <a href="https://github.com/dujingning/toolbox">github.com/dujingning/toolbox</a></footer>
 </main>
 <script>
 const grid = document.getElementById("grid"), q = document.getElementById("q");
 grid.innerHTML = TB.TOOLS.map(t => `<a class="tool" href="${t.href}" data-k="${TB.esc((t.name + " " + t.keys + " " + t.desc).toLowerCase())}">
   <span class="ico">${TB.svg(t.icon)}</span><span class="name">${TB.esc(t.name)}</span><span class="desc">${TB.esc(t.desc)}</span>${TB.svg(TB.I.arrow, "ic go")}</a>`).join("");
-const cards = [...grid.children];
+const GAMES = [
+  { href: "games/wall-rush.html", name: "城墙飞驰", desc: "古城墙顶上的 3D 卡丁车漂移竞速，3 圈 5 名对手，支持键盘与触屏", keys: "游戏 game 赛车 卡丁车 漂移 竞速 城墙 飞驰 3d",
+    icon: '<rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 10v4M5 12h4M15.5 11h.01M18 13h.01"/>' },
+];
+const gameGrid = document.getElementById("games");
+gameGrid.innerHTML = GAMES.map(t => `<a class="tool" href="${t.href}" data-k="${TB.esc((t.name + " " + t.keys + " " + t.desc).toLowerCase())}">
+  <span class="ico">${TB.svg(t.icon)}</span><span class="name">${TB.esc(t.name)}</span><span class="desc">${TB.esc(t.desc)}</span>${TB.svg(TB.I.arrow, "ic go")}</a>`).join("");
+const cards = [...grid.children, ...gameGrid.children];
 
 function filter() {
   const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -364,6 +377,7 @@ function filter() {
     c.hidden = !hit; c.classList.remove("first");
     if (hit && !shown++ && words.length) c.classList.add("first"); // 回车会打开第一个结果
   });
+  [[grid, "h-tools"], [gameGrid, "h-games"]].forEach(([g, h]) => { document.getElementById(h).hidden = ![...g.children].some(c => !c.hidden); });
   document.getElementById("empty").hidden = shown > 0;
 }
 q.addEventListener("input", filter);

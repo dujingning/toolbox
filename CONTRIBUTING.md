@@ -24,6 +24,8 @@ toolbox/
 ├── index.html              # 首页：工具卡片由 shared/base.js 中的 TOOLS 列表生成
 ├── tools/                  # 每个工具一个自包含的 HTML 文件
 │   └── misc.html           # 旧地址跳转页（原「时间戳 / 哈希 / 密码」），请勿删除
+├── games/                  # 小游戏，同样是自包含单文件，不属于工具列表
+│   └── wall-rush.html
 ├── shared/
 │   ├── base.css            # 公共样式：颜色变量、主题、按钮、表单、卡片等
 │   └── base.js             # 公共脚本：工具列表、顶栏导航、图标、提示、复制、草稿保存

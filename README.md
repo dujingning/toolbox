@@ -64,6 +64,12 @@
 
 - [**颜色转换 / 取色**](https://dujingning.github.io/toolbox/tools/color.html)：HEX / RGB / HSL / HSV / CMYK 互转，屏幕吸管与图片取色，色阶配色，WCAG 对比度检查。
 
+## 🎮 小游戏
+
+小游戏与工具分开存放在 `games/` 目录，不出现在工具页顶部的导航中，首页单独分区展示。同样是单文件、零依赖、纯本地运行。
+
+- [**城墙飞驰**](https://dujingning.github.io/toolbox/games/wall-rush.html)：古城墙顶上的 3D 卡丁车漂移竞速，3 圈、5 名对手；键盘（WASD / 方向键，Shift 漂移，空格氮气）和触屏均可操作。
+
 ## 📸 截图
 
 <table>
@@ -118,6 +124,7 @@ python3 -m http.server 8080
 docker run -d --name toolbox -p 8080:80 \
   -v "$PWD/index.html":/usr/share/nginx/html/index.html:ro \
   -v "$PWD/tools":/usr/share/nginx/html/tools:ro \
+  -v "$PWD/games":/usr/share/nginx/html/games:ro \
   nginx:alpine
 ```
 
