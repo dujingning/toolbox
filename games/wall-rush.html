@@ -218,6 +218,19 @@ input[type=range]::-moz-range-thumb { width: 1.1rem; height: 1.1rem; background:
 .tbtn.on { filter: brightness(1.5); transform: scale(0.94); }
 .tbtn.steer { width: 6.6rem; height: 6.6rem; font-size: 2.4rem; bottom: calc(var(--sab) + 1.4rem); }
 #tLeft { left: calc(var(--sal) + 1.4rem); } #tRight { left: calc(var(--sal) + 9rem); }
+/* 转向轮盘：左半屏整片都是触发区，按下处即轮盘中心 */
+#tZone { position: absolute; left: 0; bottom: 0; width: 50%; height: 72%; pointer-events: auto; touch-action: none; }
+#tStick { position: absolute; left: calc(var(--sal) + 1.8rem); bottom: calc(var(--sab) + 1.2rem); width: 9.6rem; height: 9.6rem; border-radius: 50%; pointer-events: none; opacity: 0.6;
+  background: radial-gradient(circle, rgba(20, 6, 5, 0.25) 0%, rgba(90, 16, 12, 0.5) 100%); border: 0.14rem solid rgba(248, 221, 150, 0.7); box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.4); transition: opacity 0.15s; }
+#tStick.on { opacity: 1; transition: none; }
+#tStick i { position: absolute; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 1.3rem; color: rgba(255, 243, 207, 0.75); }
+#tStick .al { left: 0.5rem; } #tStick .ar { right: 0.5rem; }
+#tKnob { position: absolute; left: 50%; top: 50%; width: 4.4rem; height: 4.4rem; margin: -2.2rem 0 0 -2.2rem; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(226, 69, 47, 0.9), rgba(90, 16, 12, 0.85)); border: 0.14rem solid rgba(248, 221, 150, 0.9); box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.5); }
+#tStick.on #tKnob { filter: brightness(1.35); }
+body:not(.steer-btn) .tbtn.steer { display: none; }
+body.steer-btn #tZone { display: none; }
+.touch-only { display: none; } body.touch .touch-only { display: flex; }
 .tbtn.act { font-size: 1.35rem; letter-spacing: 0.05em; }
 .tbtn.nitro { width: 6.8rem; height: 6.8rem; right: calc(var(--sar) + 1.3rem); bottom: calc(var(--sab) + 1.3rem); background: radial-gradient(circle at 35% 30%, rgba(255, 190, 80, 0.85), rgba(170, 80, 10, 0.78)); }
 .tbtn.drift { width: 6.2rem; height: 6.2rem; right: calc(var(--sar) + 8.8rem); bottom: calc(var(--sab) + 1rem); background: radial-gradient(circle at 35% 30%, rgba(60, 170, 180, 0.8), rgba(14, 70, 80, 0.78)); }
@@ -274,6 +287,7 @@ body.touch .standings { display: none; }
   .res-top { flex-direction: column; } .res-rank { flex-basis: auto; flex-direction: row; gap: 1rem; padding: 0.3rem; }
   .hud-tc { top: calc(var(--sat) + 6.2rem); }
   body.touch .hud-bc { bottom: auto; top: calc(var(--sat) + 10.6rem); }
+  #tZone { height: 50%; } #tStick { width: 8.4rem; height: 8.4rem; left: calc(var(--sal) + 1.2rem); }
   .tbtn.steer { width: 5.6rem; height: 5.6rem; } #tRight { left: calc(var(--sal) + 7.6rem); }
   .tbtn.nitro { width: 5.6rem; height: 5.6rem; } .tbtn.drift { width: 5.2rem; height: 5.2rem; right: calc(var(--sar) + 7.4rem); }
   .tbtn.brake { bottom: calc(var(--sab) + 7.6rem); }
@@ -332,7 +346,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
         <p><kbd>R</kbd> 复位　<kbd>Esc</kbd> 暂停</p>
       </div>
       <div><h3>触屏</h3>
-        <p>左侧 ◀ ▶ 转向，自动油门</p>
+        <p>左半屏任意处按下即出轮盘，左右拖动转向，自动油门</p>
         <p>右侧「漂移」「氮气」「刹车」，点道具槽使用道具</p>
         <h3>技巧</h3>
         <p>· 倒计时结束瞬间踩油门/点氮气 → <b>完美起步</b></p>
@@ -389,6 +403,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
   </div>
   <button id="itemSlot" class="item-slot empty"><b id="itemGlyph"></b><span id="itemName">道具</span><kbd>E</kbd></button>
   <div id="touch" class="hidden">
+    <div id="tZone"><div id="tStick"><i class="al">◀</i><i class="ar">▶</i><b id="tKnob"></b></div></div>
     <button class="tbtn steer" id="tLeft">◀</button>
     <button class="tbtn steer" id="tRight">▶</button>
     <button class="tbtn act brake" id="tBrake">刹车</button>
@@ -422,6 +437,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
     <div class="opt"><label>音效</label><input type="range" id="rngSfx" min="0" max="1" step="0.05"><output id="outSfx"></output></div>
     <div class="opt"><label>镜头距离</label><input type="range" id="rngCam" min="0.7" max="1.5" step="0.05"><output id="outCam"></output></div>
     <div class="opt"><label>操控灵敏度</label><input type="range" id="rngSens" min="0.5" max="1.6" step="0.05"><output id="outSens"></output></div>
+    <div class="opt touch-only"><label>触屏转向</label><div class="seg" id="segSteer"><button data-v="stick">轮盘</button><button data-v="btn">按键</button></div></div>
     <p class="hint" id="qualityHint"></p>
     <div class="row-btns"><button class="btn" id="btnResetRec">清除最佳成绩</button><button class="btn primary" data-close="settings">完成</button></div>
   </div>
@@ -4738,6 +4754,7 @@ const Save = {
       master: 0.8, music: 0.6, sfx: 0.85,
       camDist: 1.0,         // 0.7 ~ 1.5
       steerSens: 1.0,       // 0.5 ~ 1.6
+      touchSteer: 'stick',  // stick 轮盘（默认）| btn 左右按键
       timeOfDay: 'night',   // dusk | night（默认夜晚）
       difficulty: 1,        // 0 简单 1 普通 2 困难
       kart: 0,
@@ -7126,6 +7143,7 @@ const $ = (id) => document.getElementById(id);
 const Input = {
   keys: Object.create(null), t: { left: false, right: false, drift: false, brake: false },
   nitroQ: false, itemQ: false, resetQ: false, accelQ: false, mode: 'key',
+  stick: { id: null, cx: 0, cy: 0, x: 0 },
   init() {
     const drive = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1, ShiftLeft: 1, ShiftRight: 1, Space: 1 };
     window.addEventListener('keydown', (e) => {
@@ -7142,7 +7160,7 @@ const Input = {
       if (c === 'Enter') UI.enterKey();
     });
     window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
-    window.addEventListener('blur', () => { this.keys = Object.create(null); for (const k in this.t) this.t[k] = false; });
+    window.addEventListener('blur', () => { this.keys = Object.create(null); for (const k in this.t) this.t[k] = false; this.stickEnd(); });
     // 触屏按键（Pointer 事件，多指并行）
     const bind = (id, down, up) => {
       const el = $(id);
@@ -7153,6 +7171,27 @@ const Input = {
     };
     bind('tLeft', () => { this.t.left = true; }, () => { this.t.left = false; });
     bind('tRight', () => { this.t.right = true; }, () => { this.t.right = false; });
+    // 转向轮盘：左半屏任意处按下，轮盘就出现在拇指下；只取左右分量
+    const zone = $('tZone'), st = this.stick;
+    const sDown = (e) => {
+      e.preventDefault(); if (st.id !== null) return;
+      this.mode = 'touch'; st.id = e.pointerId; st.cx = e.clientX; st.cy = e.clientY; st.x = 0;
+      try { zone.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+      $('tStick').classList.add('on'); this.stickDraw(e.clientX, e.clientY);
+    };
+    const sMove = (e) => {
+      if (e.pointerId !== st.id) return;
+      e.preventDefault();
+      const R = this.stickR(); let dx = e.clientX - st.cx, dy = e.clientY - st.cy; const d = Math.hypot(dx, dy);
+      if (d > R) { const k = (d - R) / d; st.cx += dx * k; st.cy += dy * k; dx = e.clientX - st.cx; dy = e.clientY - st.cy; }  // 拖出圈外：轮盘跟手，反打不用先拖回来
+      const a = Math.abs(dx) / R, DZ = 0.14;
+      st.x = a <= DZ ? 0 : sign(dx) * Math.min(1, (a - DZ) / (0.92 - DZ));
+      this.stickDraw(e.clientX, e.clientY);
+    };
+    const sUp = (e) => { if (e.pointerId === st.id) this.stickEnd(); };
+    zone.addEventListener('pointerdown', sDown); zone.addEventListener('pointermove', sMove);
+    zone.addEventListener('pointerup', sUp); zone.addEventListener('pointercancel', sUp); zone.addEventListener('lostpointercapture', sUp);
+    zone.addEventListener('contextmenu', (e) => e.preventDefault());
     bind('tDrift', () => { this.t.drift = true; }, () => { this.t.drift = false; });
     bind('tBrake', () => { this.t.brake = true; }, () => { this.t.brake = false; });
     bind('tNitro', () => { this.nitroQ = true; this.accelQ = true; }, null);
@@ -7162,12 +7201,24 @@ const Input = {
     document.addEventListener('contextmenu', (e) => { if (Game.state !== 'title') e.preventDefault(); });
     document.addEventListener('touchmove', (e) => { if (!e.target.closest || !e.target.closest('.panel, .sel-cards, .sel-side')) e.preventDefault(); }, { passive: false });
   },
+  /** 轮盘有效行程（像素）= 底盘半径 − 摇杆头半径 */
+  stickR() { return Math.max(24, ($('tStick').offsetWidth - $('tKnob').offsetWidth) / 2); },
+  stickDraw(px, py) {
+    const st = this.stick, base = $('tStick'), zr = $('tZone').getBoundingClientRect(), h = base.offsetWidth / 2;
+    base.style.left = (st.cx - zr.left - h) + 'px'; base.style.top = (st.cy - zr.top - h) + 'px'; base.style.bottom = 'auto';
+    $('tKnob').style.transform = `translate(${(px - st.cx).toFixed(1)}px, ${(py - st.cy).toFixed(1)}px)`;
+  },
+  stickEnd() {
+    const st = this.stick, base = $('tStick'); st.id = null; st.x = 0;
+    if (!base) return;
+    base.classList.remove('on'); base.style.left = base.style.top = base.style.bottom = ''; $('tKnob').style.transform = '';
+  },
   throttleHeld() { return !!(this.keys.KeyW || this.keys.ArrowUp); },
   /** 读取本帧输入；按下沿类输入读后即清 */
   read(o) {
     const K = this.keys, T = this.t;
     const l = K.KeyA || K.ArrowLeft || T.left, r = K.KeyD || K.ArrowRight || T.right;
-    o.steer = (r ? 1 : 0) - (l ? 1 : 0);
+    o.steer = clamp((r ? 1 : 0) - (l ? 1 : 0) + this.stick.x, -1, 1);
     o.brake = (K.KeyS || K.ArrowDown || T.brake) ? 1 : 0;
     o.throttle = this.mode === 'touch' ? (o.brake ? 0 : 1) : (this.throttleHeld() ? 1 : 0);
     o.drift = !!(K.ShiftLeft || K.ShiftRight || T.drift);
@@ -7214,6 +7265,9 @@ const UI = {
     click('btnQuit', () => { this.show('pause', false); Game.toTitle(); });
     // 设置
     this.seg('segQuality', () => S.quality, (v) => { S.quality = v; Engine.applyQualitySetting(v); this.qualityHint(); });
+    const steerMode = () => { document.body.classList.toggle('steer-btn', S.touchSteer === 'btn'); Input.stickEnd(); Input.t.left = Input.t.right = false; };
+    this.seg('segSteer', () => S.touchSteer, (v) => { S.touchSteer = v; steerMode(); });
+    steerMode();
     const rng = (id, out, key, fmt, apply) => {
       const r = $(id), o = $(out); r.value = S[key]; o.textContent = fmt(S[key]);
       r.addEventListener('input', () => { S[key] = +r.value; o.textContent = fmt(S[key]); if (apply) apply(); });
