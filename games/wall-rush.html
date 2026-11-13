@@ -283,6 +283,9 @@ body.touch .standings { display: none; }
 #fpsBox { position: fixed; left: 8px; top: 8px; z-index: 9999; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,.6); color: #7CFC7C; font: 13px/1.5 monospace; pointer-events: none; }
 #fpsBox.hidden { display: none; }
 
+#btnFull { width: 2.6rem; height: 2.6rem; font-size: 1.1rem; color: var(--gold-hi); background: rgba(30, 8, 7, 0.8); border: 1px solid var(--gold-lo); border-radius: 50%; }
+body:not(.can-fs) .fs-btn { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -308,6 +311,7 @@ body.touch .standings { display: none; }
       <button class="btn primary" id="btnStart">开始比赛</button>
       <button class="btn" id="btnHelp">操作说明</button>
       <button class="btn" id="btnSettings">设置</button>
+      <button class="btn fs-btn" id="btnFullTitle">全屏</button>
     </div>
     <div class="enter-hint"><kbd>Enter</kbd> 快速开始</div>
     <div class="record" id="titleRecord"></div>
@@ -368,6 +372,7 @@ body.touch .standings { display: none; }
     <div class="time-sub" id="timeSub">本圈 00:00.00</div>
   </div>
   <div class="hud-tr">
+    <button id="btnFull" class="fs-btn" aria-label="全屏">⛶</button>
     <button id="btnPause" aria-label="暂停">❚❚</button>
     <canvas id="minimap" width="200" height="200"></canvas>
   </div>
@@ -7829,6 +7834,22 @@ const FpsBox = {
 };
 window.addEventListener('keydown', (e) => { if (e.key === 'F3') { e.preventDefault(); FpsBox.toggle(); } });
 window.Engine = Engine;
+
+/** 手机端全屏按钮：仅在支持全屏 API 的触屏设备上显示（iPhone Safari 不支持，自动隐藏） */
+(function setupFullscreen() {
+  const d = document, el = d.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!IS_MOBILE || !req) return;
+  d.body.classList.add('can-fs');
+  const isFs = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+  const sync = () => { const t = isFs() ? '退出全屏' : '全屏'; const a = d.getElementById('btnFullTitle'); if (a) a.textContent = t; };
+  const toggle = () => {
+    if (isFs()) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return; }
+    Promise.resolve(req.call(el)).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* 不支持锁定方向 */ } }).catch(() => {});
+  };
+  ['btnFull', 'btnFullTitle'].forEach((id) => { const b = d.getElementById(id); if (b) b.addEventListener('click', (e) => { e.stopPropagation(); toggle(); }); });
+  d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
+})();
 
 (function makeIcon() {
   try {
