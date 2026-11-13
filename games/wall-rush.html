@@ -27,10 +27,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #120706; col
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; touch-action: manipulation; }
 .hidden { display: none !important; }
 #stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-#vignette, #speedfx, #haze, #flash, #fade { position: fixed; inset: 0; pointer-events: none; }
+#vignette, #speedfx, #haze, #storm, #flash, #fade { position: fixed; inset: 0; pointer-events: none; }
 #vignette { background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(10, 2, 2, 0.5) 100%); }
 #speedfx { opacity: 0; background: repeating-conic-gradient(from 0deg at 50% 56%, rgba(255, 236, 190, 0) 0deg, rgba(255, 236, 190, 0.5) 0.5deg, rgba(255, 236, 190, 0) 1.1deg, rgba(255, 236, 190, 0) 5deg);
   -webkit-mask-image: radial-gradient(ellipse at 50% 56%, transparent 34%, #000 78%); mask-image: radial-gradient(ellipse at 50% 56%, transparent 34%, #000 78%); }
+/* 沙暴遮罩：四周压暗的沙色 + 斜向飞沙条纹（纯 CSS，低画质也用它） */
+#storm { opacity: 0; --sc: 196, 138, 82; background: repeating-linear-gradient(104deg, rgba(var(--sc), 0) 0 1.6rem, rgba(var(--sc), 0.2) 1.6rem 1.75rem, rgba(var(--sc), 0) 1.75rem 4.2rem) 0 0 / 46rem 100%,
+  radial-gradient(ellipse at 50% 58%, rgba(var(--sc), 0.08) 20%, rgba(var(--sc), 0.62) 100%); }
+#storm.on { animation: stormFly 0.55s linear infinite; }
+@keyframes stormFly { to { background-position: 46rem 0, 0 0; } }
 #haze { opacity: 0; background: radial-gradient(ellipse at center, rgba(120, 100, 140, 0.55), rgba(60, 45, 80, 0.88)); transition: opacity 0.3s; }
 #flash { opacity: 0; background: #fff3d0; }
 #fade { background: #0b0403; opacity: 0; transition: opacity 0.35s; z-index: 90; }
@@ -128,6 +133,7 @@ body.touch .enter-hint { display: none; }
 @media (prefers-reduced-motion: reduce) { .t-embers { display: none; } .logo span, .btn.primary::after { animation: none; } }
 .credit { position: absolute; left: 0; right: 0; bottom: calc(var(--sab) + 0.7rem); text-align: center; font-family: var(--kai); font-size: 1rem; letter-spacing: 0.3em; text-indent: 0.3em; color: var(--gold-hi); text-shadow: 0 1px 4px #000; opacity: 0.9; pointer-events: none; }
 .help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; font-size: 1rem; line-height: 1.7; }
+.help-wide { grid-column: 1 / -1; border-top: 1px solid rgba(232, 184, 74, 0.35); padding-top: 0.3rem; }
 .help-grid p { margin: 0.15rem 0; } .help-grid b { color: var(--gold-hi); } .help-grid h3 { margin-top: 0.4rem; }
 
 /* ---------- 选车 ---------- */
@@ -136,6 +142,14 @@ body.touch .enter-hint { display: none; }
 .sel-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
 .sel-head h2 { margin: 0; font-family: var(--kai); font-size: 2.2rem; letter-spacing: 0.3em; color: var(--gold-hi); text-shadow: 0 0.15rem 0.5rem #000; }
 .sel-head span { width: 6rem; }
+/* 赛道选择：名称 + 一句话简介 */
+.track-pick { display: flex; gap: 0.8rem; justify-content: center; flex: 1; min-width: 0; margin: 0 0.8rem; }
+.tcard { flex: 0 1 19rem; min-width: 0; text-align: left; padding: 0.4rem 1.1rem 0.45rem 1rem; border: 1px solid rgba(232, 184, 74, 0.4); border-left: 0.35rem solid var(--gold-lo);
+  background: linear-gradient(100deg, rgba(40, 10, 8, 0.9), rgba(40, 10, 8, 0.55)); clip-path: polygon(0 0, 100% 0, calc(100% - 0.8rem) 100%, 0 100%); transition: background 0.15s, transform 0.15s; }
+.tcard b { display: block; font-family: var(--kai); font-size: 1.5rem; letter-spacing: 0.18em; color: var(--paper); }
+.tcard span { display: block; width: auto; font-size: 0.8rem; line-height: 1.35; color: rgba(243, 230, 200, 0.75); }
+.tcard.on { background: linear-gradient(100deg, var(--red), rgba(122, 20, 16, 0.75)); border-color: var(--gold); border-left-color: var(--gold-hi); transform: translateY(0.15rem); }
+.tcard.on b { color: var(--gold-hi); } .tcard.on span { color: var(--paper); }
 .sel-cards { grid-column: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.7rem; justify-content: safe center; overflow-y: auto; touch-action: pan-y; }
 .kcard { text-align: left; padding: 0.7rem 1rem 0.7rem 1.2rem; border: 1px solid rgba(232, 184, 74, 0.4); background: linear-gradient(100deg, rgba(40, 10, 8, 0.9), rgba(40, 10, 8, 0.55));
   clip-path: polygon(0 0, 100% 0, calc(100% - 1rem) 100%, 0 100%); border-left: 0.35rem solid var(--kc, var(--gold)); transition: transform 0.15s, background 0.15s; }
@@ -191,6 +205,16 @@ input[type=range]::-moz-range-thumb { width: 1.1rem; height: 1.1rem; background:
 @keyframes msgIn { 0% { opacity: 0; transform: translateX(-50%) scale(1.7) skewX(-8deg); } 12% { opacity: 1; transform: translateX(-50%) scale(1) skewX(-8deg); } 75% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-0.8rem) skewX(-8deg); } }
 #split { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); font-size: 1.25rem; font-style: italic; padding: 0.15rem 1.2rem; background: rgba(20, 8, 7, 0.75); border-bottom: 2px solid var(--gold); opacity: 0; transition: opacity 0.3s; white-space: nowrap; font-family: var(--sans); }
 #split.show { opacity: 1; } #split b { font-family: var(--num); } #split .fast { color: #7dffa0; } #split .slow { color: #ff8a7a; }
+.lap-row { display: flex; gap: 0.3rem; } .lap.gates { border-left-color: var(--gold); padding-right: 1rem; }
+#oobWarn, #stormWarn { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--kai); font-weight: 900; white-space: nowrap; color: #fff; border: 0.15rem solid var(--gold-hi); }
+#oobWarn { top: 36%; font-size: 1.9rem; padding: 0.2rem 1.6rem; background: var(--red); animation: blink 0.5s steps(2) infinite; }
+#stormWarn { top: 30%; font-size: 2.3rem; letter-spacing: 0.2em; padding: 0.25rem 2.2rem; background: rgba(120, 78, 36, 0.92); animation: blink 0.7s steps(2) infinite; }
+/* 漏门提示：贴着屏幕边缘、指向那座拱门的箭头 */
+#gateArrow { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+#gateArrow i { position: absolute; left: -1.6rem; top: -1.6rem; width: 3.2rem; height: 3.2rem; display: grid; place-items: center; font-style: normal; font-size: 2.3rem; line-height: 1; color: var(--gold-hi);
+  text-shadow: 0 0 0.6rem #ff7a2a, 0.1rem 0.1rem 0 var(--red-deep); transform: rotate(var(--rot, 0deg)); animation: arrowPulse 0.7s ease-in-out infinite; }
+#gateArrow span { position: absolute; left: 50%; top: 1.9rem; transform: translateX(-50%); white-space: nowrap; font-family: var(--sans); font-size: 0.85rem; padding: 0.1rem 0.7rem; color: #fff3cf; background: rgba(122, 20, 16, 0.88); border: 1px solid var(--gold-lo); border-radius: 1rem; }
+@keyframes arrowPulse { 50% { filter: brightness(1.6); scale: 1.18; } }
 #wrongway { position: absolute; top: 36%; left: 50%; transform: translateX(-50%); font-family: var(--kai); font-size: 2.6rem; font-weight: 900; color: #fff; padding: 0.2rem 2rem; background: var(--red); border: 0.15rem solid var(--gold-hi); animation: blink 0.6s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0.25; } }
 .hud-bc { position: absolute; left: 50%; bottom: calc(var(--sab) + 0.8rem); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
@@ -270,7 +294,7 @@ body.touch .standings { display: none; }
 
 /* ---------- 自适应 ---------- */
 @media (max-height: 520px) {
-  .sel-desc { display: none; } .panel.slim { padding: 0.7rem 1rem; } .btn.big { font-size: 1.4rem; padding: 0.5rem 1rem; } .sel-head h2 { font-size: 1.6rem; }
+  .sel-desc { display: none; } .panel.slim { padding: 0.7rem 1rem; } .btn.big { font-size: 1.4rem; padding: 0.5rem 1rem; } .tcard { padding: 0.25rem 1rem 0.3rem 0.8rem; } .tcard b { font-size: 1.25rem; } .tcard span { font-size: 0.72rem; }
   .kcard { padding: 0.4rem 1rem 0.4rem 1.2rem; } .kcard b { font-size: 1.35rem; }
   .standings { display: none; }
   #minimap { width: 7.6rem; height: 7.6rem; }
@@ -284,6 +308,7 @@ body.touch .standings { display: none; }
   .kcard { flex: 1 0 8.5rem; } .kcard.on { transform: translateY(-0.3rem); }
   .sel-side { grid-column: 1; grid-row: 4; max-height: 52vh; } .sel-desc { min-height: 0; }
   .help-grid { grid-template-columns: 1fr; }
+  .sel-head { flex-wrap: wrap; gap: 0.5rem; } .sel-head span { display: none; } .track-pick { order: 3; flex: 1 0 100%; margin: 0; }
   .res-top { flex-direction: column; } .res-rank { flex-basis: auto; flex-direction: row; gap: 1rem; padding: 0.3rem; }
   .hud-tc { top: calc(var(--sat) + 6.2rem); }
   body.touch .hud-bc { bottom: auto; top: calc(var(--sat) + 10.6rem); }
@@ -307,6 +332,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
 <div id="vignette"></div>
 <div id="speedfx"></div>
 <div id="haze"></div>
+<div id="storm"></div>
 <div id="flash"></div>
 <div id="fpsBox" class="hidden"></div>
 
@@ -318,9 +344,9 @@ body:not(.can-fs) .fs-btn { display: none !important; }
   <div class="t-embers" id="embers"></div>
   <div class="t-bar top"></div><div class="t-bar bot"></div>
   <div class="title-wrap">
-    <div class="title-deco"><i></i><span>古城墙顶 · 漂移竞速</span><i></i></div>
+    <div class="title-deco"><i></i><span id="titleDeco">古城墙顶 · 漂移竞速</span><i></i></div>
     <h1 class="logo"><span>城</span><span>墙</span><span>飞</span><span>驰</span><i class="stamp">竞速</i></h1>
-    <div class="title-sub">垛口为栏 · 马道为径 · 三圈定胜负</div>
+    <div class="title-sub" id="titleSub">垛口为栏 · 马道为径 · 三圈定胜负</div>
     <div class="menu">
       <button class="btn primary" id="btnStart">开始比赛</button>
       <button class="btn" id="btnHelp">操作说明</button>
@@ -354,6 +380,13 @@ body:not(.can-fs) .fs-btn { display: none !important; }
         <p>· 一次喷射将尽时立刻再喷 → <b>连喷</b>更快更久</p>
         <p>· 当心<b>垛口缺口</b>（红色路沿）：冲出会坠落并损失时间</p>
       </div>
+      <div class="help-wide"><h3>沙漠遗迹</h3>
+        <p>· 没有护栏：石板古道之外是沙地，可以横穿抄近路，不会坠落</p>
+        <p>· 石板、石台全速；<b>硬沙</b>约 85%；颜色更深的<b>软沙</b>只有 55%；绿洲浅水 70%</p>
+        <p>· <b>喷射期间无视沙地减速</b>——把氮气留给近路；冲上沙丘顶的石板可以飞跃</p>
+        <p>· 七座<b>石拱门</b>须按顺序通过，下一座门顶有光柱；漏了不罚时，跟着屏幕边缘的箭头回头补过</p>
+        <p>· 断柱廊的石柱、神殿的墙是实心的；离路线太远会自动复位；第 2 圈会刮一次<b>沙暴</b></p>
+      </div>
     </div>
     <div class="row-btns"><button class="btn primary" data-close="help">知道了</button></div>
   </div>
@@ -361,7 +394,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
 
 <!-- 选车 -->
 <section id="select" class="screen hidden">
-  <header class="sel-head"><button class="btn small" id="btnSelBack">‹ 返回</button><h2>选择座驾</h2><span></span></header>
+  <header class="sel-head"><button class="btn small" id="btnSelBack">‹ 返回</button><div class="track-pick" id="trackPick"></div><span></span></header>
   <div class="sel-cards" id="kartCards"></div>
   <aside class="sel-side">
     <div class="panel slim">
@@ -379,7 +412,7 @@ body:not(.can-fs) .fs-btn { display: none !important; }
 <section id="hud" class="hidden">
   <div class="hud-tl">
     <div class="rank"><b id="rankNum">1</b><span>/6</span><em>名次</em></div>
-    <div class="lap">圈数 <b id="lapNum">1</b>/3</div>
+    <div class="lap-row"><div class="lap">圈数 <b id="lapNum">1</b>/3</div><div class="lap gates hidden" id="gateBox">拱门 <b id="gateNum">0</b>/<span id="gateTot">7</span></div></div>
   </div>
   <div class="hud-tc">
     <div class="time" id="timeMain">00:00.00</div>
@@ -394,6 +427,9 @@ body:not(.can-fs) .fs-btn { display: none !important; }
   <div id="msg"></div>
   <div id="split"></div>
   <div id="wrongway" class="hidden">逆 行</div>
+  <div id="oobWarn" class="hidden">偏离赛道 · 即将复位</div>
+  <div id="stormWarn" class="hidden">沙 暴 来 袭</div>
+  <div id="gateArrow" class="hidden"><i>➤</i><span>漏过拱门</span></div>
   <div class="hud-bc">
     <div class="speed"><b id="speedNum">0</b><span>km/h</span></div>
     <div class="nitro" id="nitro">
@@ -4758,10 +4794,13 @@ const Save = {
       timeOfDay: 'night',   // dusk | night（默认夜晚）
       difficulty: 1,        // 0 简单 1 普通 2 困难
       kart: 0,
+      track: 'wall',        // wall 古城墙 | desert 沙漠遗迹
       v2: true,
     },
-    records: { bestTotal: null, bestLap: null, bestRank: null, races: 0 },
+    records: {},            // 按赛道分开：{ wall: {bestTotal,bestLap,bestRank,races}, desert: {...} }
   },
+  /** 某条赛道的成绩记录（没有则新建空记录） */
+  rec(id) { return this.data.records[id] || (this.data.records[id] = { bestTotal: null, bestLap: null, bestRank: null, races: 0 }); },
   load() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
@@ -4770,7 +4809,11 @@ const Save = {
       if (d && d.settings) Object.assign(this.data.settings, d.settings);
       // 默认时辰改为夜晚：旧存档只迁移一次，之后尊重玩家自己的选择
       if (d && d.settings && !d.settings.v2) this.data.settings.timeOfDay = 'night';
-      if (d && d.records) Object.assign(this.data.records, d.records);
+      if (d && d.records) {
+        // 旧存档只有一份成绩（当时只有古城墙）：整份归到古城墙名下
+        if ('bestTotal' in d.records || 'races' in d.records) Object.assign(this.rec('wall'), d.records);
+        else for (const id in d.records) if (d.records[id] && typeof d.records[id] === 'object') Object.assign(this.rec(id), d.records[id]);
+      }
     } catch (e) { /* 隐私模式等情况下静默降级 */ }
   },
   store() {
@@ -5032,15 +5075,17 @@ const Engine = {
       uniforms: {
         cZen: { value: COL(0) }, cMid: { value: COL(0) }, cHor: { value: COL(0) }, cSun: { value: COL(0) },
         sunDir: { value: V3(0, 1, 0) }, disc: { value: 0.999 }, sunAmt: { value: 1 },
+        cStorm: { value: COL(0) }, storm: { value: 0 },
       },
       vertexShader: `varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-      fragmentShader: `varying vec3 vDir; uniform vec3 cZen,cMid,cHor,cSun,sunDir; uniform float disc,sunAmt;
+      fragmentShader: `varying vec3 vDir; uniform vec3 cZen,cMid,cHor,cSun,sunDir,cStorm; uniform float disc,sunAmt,storm;
         void main(){ vec3 d = normalize(vDir); float h = max(d.y, 0.0);
           vec3 c = mix(cHor, cMid, smoothstep(0.0, 0.16, h)); c = mix(c, cZen, smoothstep(0.1, 0.62, h));
           float sd = max(dot(d, sunDir), 0.0);
           c += cSun * sunAmt * (pow(sd, 10.0) * 0.28 + pow(sd, 90.0) * 0.5);
           c = mix(c, cSun * 1.3, smoothstep(disc, disc + 0.00025, sd));
           c = mix(c, cHor * 0.55, smoothstep(0.0, -0.12, d.y));
+          c = mix(c, cStorm, storm);
           gl_FragColor = vec4(c, 1.0);
           #include <colorspace_fragment>
         }`,
@@ -5117,7 +5162,8 @@ const Engine = {
 
   /** 切换黄昏 / 夜晚 */
   applyTime(tod) {
-    const P = TIME_PRESETS[tod] || TIME_PRESETS.dusk; this.tod = tod; this.preset = P;
+    const set = (typeof World !== 'undefined' && World.def && World.def.time) || TIME_PRESETS;   // 各赛道可自带时辰预设
+    const P = set[tod] || set.dusk; this.tod = tod; this.preset = P;
     const u = this.skyMat.uniforms;
     u.cZen.value.set(P.zen); u.cMid.value.set(P.mid); u.cHor.value.set(P.hor); u.cSun.value.set(P.sun);
     u.sunDir.value.set(P.sunDir[0], P.sunDir[1], P.sunDir[2]).normalize(); u.disc.value = P.disc; u.sunAmt.value = P.sunAmt;
@@ -5127,7 +5173,24 @@ const Engine = {
     this.starMat.opacity = P.stars;
     this.lamp.intensity = P.headlamp * 48;
     this.mats.emis.color.setScalar(P.lantern);
+    this.stormK = -1;                              // 让下一次 setStorm 重新套用
     if (typeof World !== 'undefined' && World.ready) World.applyTime(P);
+  },
+
+  /** 沙暴强度 k（0~1）：雾收紧到约 40 米，天空与星星被沙尘盖住；k=0 时恢复时辰预设。dim 为室内压暗系数 */
+  stormK: 0, dimK: 0,
+  setStorm(k, dim) {
+    if (k === this.stormK && dim === this.dimK) return;
+    this.stormK = k; this.dimK = dim;
+    const P = this.preset, f = this.scene.fog, u = this.skyMat.uniforms, far0 = Math.min(P.fogFar, this.q.far * 0.95);
+    const cS = this._cS || (this._cS = COL(0)); cS.set(P.storm || P.fog);
+    f.color.set(P.fog).lerp(cS, k); f.near = lerp(P.fogNear, 4, k); f.far = lerp(far0, 44, k);
+    u.cStorm.value.copy(cS); u.storm.value = k * 0.96;
+    this.starMat.opacity = P.stars * (1 - k);
+    this.sun.intensity = P.dirInt * (1 - 0.45 * k) * (1 - 0.82 * dim);
+    this.hemi.intensity = P.hemiInt * (1 - 0.15 * k) * (1 - 0.5 * dim);
+    this.lamp.intensity = Math.max(P.headlamp, dim * 0.9) * 48;
+    if (typeof World !== 'undefined' && World.ready && World.desert) Desert.setStorm(World, k);
   },
 
   /** 每帧：让天空/阴影相机跟随焦点 */
@@ -5160,12 +5223,16 @@ const Engine = {
 };
 
 /* ============================================================================
- * 二 · 赛道生成（数学核心）：城墙马道中心线、起伏、缺口、飞跃断口
+ * 二 · 赛道生成（数学核心）：闭环中心线、起伏、投影查询；各赛道的特征由「赛道定义」提供
  * ========================================================================== */
-const HALF_W = 7;          // 马道半宽（米）
-const WALL_H = 11.5;       // 城墙相对地面的高度
+/** 赛道定义表：id → { name, blurb, cp, halfW, open, setup(T, at), time, scenery, music, map } */
+const TRACKS = {};
+const TRACK_ORDER = ['wall', 'desert'];
 
-/** 控制点 [x, 高度, z]。第 0 点为起点线，沿闭环一圈。 */
+const HALF_W = 7;          // 古城墙：马道半宽（米）
+const WALL_H = 11.5;       // 古城墙：城墙相对地面的高度
+
+/** 古城墙控制点 [x, 高度, z]。第 0 点为起点线，沿闭环一圈。 */
 const TRACK_CP = [
   [-20, 12, 236],    // 0  起点牌楼（南墙直道）
   [95, 12, 236],     // 1
@@ -5191,8 +5258,8 @@ const TRACK_CP = [
   [-135, 12, 238],   // 21
 ];
 
-function buildTrackCore() {
-  const CP = TRACK_CP, n = CP.length, SUB = 28;
+function buildTrackCore(def) {
+  const CP = def.cp, n = CP.length, SUB = 28;
   const d2 = (a, b) => Math.hypot(a[0] - b[0], a[2] - b[2]);
   function cr(p0, p1, p2, p3, t, out) {
     const t1 = Math.sqrt(d2(p0, p1)), t2 = t1 + Math.sqrt(d2(p1, p2)), t3 = t2 + Math.sqrt(d2(p2, p3));
@@ -5258,6 +5325,7 @@ function buildTrackCore() {
 
   const T = {
     N, L, ds, px, py, pz, tx, tz, rx, rz, theta, turn, turnSm, lineD, cpS, insideSign, W,
+    def, id: def.id, halfW: def.halfW, open: !!def.open,
     hole: new Uint8Array(N),      // 该段无路面（飞跃断口）
     railR: new Uint8Array(N).fill(1), railL: new Uint8Array(N).fill(1),  // 该段两侧是否有垛墙
     tunnel: new Uint8Array(N),    // 城楼门洞段
@@ -5266,11 +5334,69 @@ function buildTrackCore() {
     wrapS: (s) => ((s % L) + L) % L,
   };
 
-  /* ---------- 特征布置 ---------- */
-  const F = T.features;
-  const at = (cp, off) => T.wrapS(cpS[cp] + (off || 0));
-  const outer = -insideSign;            // 城外一侧
-  F.outer = outer;
+  /* ---------- 查询 ---------- */
+  /** 把世界坐标投影到赛道：结果写入 out {i,t,s,d}；hint<0 时做全局搜索 */
+  T.project = function (x, z, hint, out) {
+    let best = 1e18, bi = 0, bt = 0;
+    const lo = hint < 0 ? 0 : hint - 9, hi = hint < 0 ? N - 1 : hint + 9;
+    for (let q = lo; q <= hi; q++) {
+      const i = W(q), k = W(q + 1);
+      const ax = px[i], az = pz[i], bx = px[k] - ax, bz = pz[k] - az;
+      let t = ((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz);
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const cx = ax + bx * t - x, cz = az + bz * t - z, dd = cx * cx + cz * cz;
+      if (dd < best) { best = dd; bi = i; bt = t; }
+    }
+    const k = W(bi + 1);
+    const cx = lerp(px[bi], px[k], bt), cz = lerp(pz[bi], pz[k], bt);
+    let nx = lerp(rx[bi], rx[k], bt), nz = lerp(rz[bi], rz[k], bt);
+    const nl = Math.hypot(nx, nz) || 1; nx /= nl; nz /= nl;
+    out.i = bi; out.t = bt; out.s = (bi + bt) * ds; out.d = (x - cx) * nx + (z - cz) * nz;
+    out.nx = nx; out.nz = nz;
+    return out;
+  };
+  /** 路面名义高度（不考虑断口） */
+  T.heightAt = function (i, t) {
+    const k = W(i + 1);
+    if (T.hole[i]) return py[i];            // 断口内：维持起跳沿高度作为名义值
+    return lerp(py[i], py[k], t);
+  };
+  T.heightS = function (s) { s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N; return T.heightAt(i, f - Math.floor(f)); };
+  /** 实际可承载地面高度：断口或墙外返回 -Infinity */
+  T.groundAt = function (i, t, d) {
+    if (T.hole[i]) return -Infinity;
+    if (d > T.halfW + 0.25 || d < -T.halfW - 0.25) return -Infinity;
+    return lerp(py[i], py[W(i + 1)], t);
+  };
+  T.hasRail = function (i, side) { return (side > 0 ? T.railR : T.railL)[i] === 1 && !T.hole[i]; };
+  /** (s, d) → 世界坐标 */
+  T.posAt = function (s, d, out) {
+    s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N, t = f - Math.floor(f), k = W(i + 1);
+    out.x = lerp(px[i], px[k], t) + lerp(rx[i], rx[k], t) * d;
+    out.z = lerp(pz[i], pz[k], t) + lerp(rz[i], rz[k], t) * d;
+    out.y = T.heightAt(i, t);
+    return out;
+  };
+  T.thetaAt = function (s) {
+    s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N, t = f - Math.floor(f);
+    return theta[i] + wrapPi(theta[W(i + 1)] - theta[i]) * t;
+  };
+  /** 复位点：默认原地；各赛道可覆盖（避开断口等） */
+  T.respawnS = function (s) { return T.wrapS(s); };
+  /** 局部坐标系 → 世界：返回 {x,y,z,theta} */
+  T.frame = function (i) { return { x: px[i], y: py[i], z: pz[i], theta: theta[i], rx: rx[i], rz: rz[i], tx: tx[i], tz: tz[i] }; };
+
+  /* ---------- 赛道特征（由赛道定义布置，可覆盖上面的查询） ---------- */
+  T.features.outer = -insideSign;       // 闭环外侧（+1 右 / -1 左）
+  def.setup(T, (cp, off) => T.wrapS(cpS[cp] + (off || 0)));
+  return T;
+}
+
+/* ---------------------------------------------------------------------------
+ * 古城墙：垛口缺口、马道飞跃、城楼门洞、角楼敌台
+ * ------------------------------------------------------------------------- */
+function setupWallTrack(T, at) {
+  const { N, ds, py, W } = T, F = T.features, outer = F.outer;   // outer：城外一侧
   // 马道飞跃：坡道 + 断口
   const jumpS = at(13, 8);
   F.jump = { rampStart: jumpS - 28, lip: jumpS, holeEnd: jumpS + 13, kick: 4.6, padStart: jumpS - 60 };
@@ -5328,54 +5454,6 @@ function buildTrackCore() {
     if (!(side > 0 ? T.railR : T.railL)[i]) continue;
     F.lanterns.push({ i, side });
   }
-
-  /* ---------- 查询 ---------- */
-  /** 把世界坐标投影到赛道：结果写入 out {i,t,s,d}；hint<0 时做全局搜索 */
-  T.project = function (x, z, hint, out) {
-    let best = 1e18, bi = 0, bt = 0;
-    const lo = hint < 0 ? 0 : hint - 9, hi = hint < 0 ? N - 1 : hint + 9;
-    for (let q = lo; q <= hi; q++) {
-      const i = W(q), k = W(q + 1);
-      const ax = px[i], az = pz[i], bx = px[k] - ax, bz = pz[k] - az;
-      let t = ((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz);
-      t = t < 0 ? 0 : t > 1 ? 1 : t;
-      const cx = ax + bx * t - x, cz = az + bz * t - z, dd = cx * cx + cz * cz;
-      if (dd < best) { best = dd; bi = i; bt = t; }
-    }
-    const k = W(bi + 1);
-    const cx = lerp(px[bi], px[k], bt), cz = lerp(pz[bi], pz[k], bt);
-    let nx = lerp(rx[bi], rx[k], bt), nz = lerp(rz[bi], rz[k], bt);
-    const nl = Math.hypot(nx, nz) || 1; nx /= nl; nz /= nl;
-    out.i = bi; out.t = bt; out.s = (bi + bt) * ds; out.d = (x - cx) * nx + (z - cz) * nz;
-    out.nx = nx; out.nz = nz;
-    return out;
-  };
-  /** 路面名义高度（不考虑断口） */
-  T.heightAt = function (i, t) {
-    const k = W(i + 1);
-    if (T.hole[i]) return py[i];            // 断口内：维持起跳沿高度作为名义值
-    return lerp(py[i], py[k], t);
-  };
-  T.heightS = function (s) { s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N; return T.heightAt(i, f - Math.floor(f)); };
-  /** 实际可承载地面高度：断口或墙外返回 -Infinity */
-  T.groundAt = function (i, t, d) {
-    if (T.hole[i]) return -Infinity;
-    if (d > HALF_W + 0.25 || d < -HALF_W - 0.25) return -Infinity;
-    return lerp(py[i], py[W(i + 1)], t);
-  };
-  T.hasRail = function (i, side) { return (side > 0 ? T.railR : T.railL)[i] === 1 && !T.hole[i]; };
-  /** (s, d) → 世界坐标 */
-  T.posAt = function (s, d, out) {
-    s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N, t = f - Math.floor(f), k = W(i + 1);
-    out.x = lerp(px[i], px[k], t) + lerp(rx[i], rx[k], t) * d;
-    out.z = lerp(pz[i], pz[k], t) + lerp(rz[i], rz[k], t) * d;
-    out.y = T.heightAt(i, t);
-    return out;
-  };
-  T.thetaAt = function (s) {
-    s = T.wrapS(s); const f = s / ds, i = Math.floor(f) % N, t = f - Math.floor(f);
-    return theta[i] + wrapPi(theta[W(i + 1)] - theta[i]) * t;
-  };
   /** 坠落后的重生点（避开飞跃断口） */
   T.respawnS = function (s) {
     s = T.wrapS(s);
@@ -5383,10 +5461,14 @@ function buildTrackCore() {
     if (s > J.rampStart - 6 && s < J.holeEnd + 6) return J.holeEnd + 16;
     return s;
   };
-  /** 局部坐标系 → 世界：返回 {x,y,z,theta} */
-  T.frame = function (i) { return { x: px[i], y: py[i], z: pz[i], theta: theta[i], rx: rx[i], rz: rz[i], tx: tx[i], tz: tz[i] }; };
-  return T;
 }
+TRACKS.wall = {
+  id: 'wall', name: '古城墙', blurb: '垛口为栏的城头马道：缺口会坠落，断口要飞跃。',
+  cp: TRACK_CP, halfW: HALF_W, open: false, setup: setupWallTrack,
+  scenery: 'wall', music: 'wall', time: null,       // time 为空 → 用引擎默认的 TIME_PRESETS
+  map: { span: 600, cx: -6, cz: -6, fit: 0.78, road: '#b3261e', line: '#f6d98a' },
+  title: ['古城墙顶 · 漂移竞速', '垛口为栏 · 马道为径 · 三圈定胜负'], loading: '正在砌筑城墙…', noRecord: '尚无成绩 · 去城墙上跑一圈吧',
+};
 
 /* ============================================================================
  * 二 · 赛道生成（场景）：城墙网格、垛口、城楼/角楼/敌台、牌楼、城内屋顶、远山
@@ -5476,23 +5558,44 @@ function lanternQ(em, glowPts, M, x, y, z, s) {
 }
 
 const World = {
-  ready: false, T: null, root: null, trackGroup: null, chunks: [],
+  ready: false, id: null, def: null, desert: false, T: null, root: null, trackGroup: null, chunks: [],
   terr: null, housesMesh: null, treesMesh: null, cityLights: null, glowPoints: null, mountains: [],
-  padTex: null, bakeLevel: -1, density: 1,
+  padTex: null, bakeLevel: -1, density: 1, skyLan: null,
 
-  build() {
-    const T = this.T = buildTrackCore();
+  /** 按赛道 id 构建场景；已有场景会先卸载 */
+  build(id) {
+    if (this.ready) this.unload();
+    const def = this.def = TRACKS[id] || TRACKS.wall;
+    this.id = def.id; this.desert = def.scenery === 'desert';
+    this.T = buildTrackCore(def);
     this.root = new THREE.Group(); Engine.scene.add(this.root);
     this.trackGroup = new THREE.Group(); this.root.add(this.trackGroup);
-    this._buildTerrain();
-    this._buildProps();
-    this._buildCity();
-    this._buildMountains();
-    this._buildSkyLanterns();
-    this._buildDecals();
+    if (this.desert) Desert.build(this);
+    else {
+      this._buildTerrain();
+      this._buildProps();
+      this._buildCity();
+      this._buildMountains();
+      this._buildSkyLanterns();
+      this._buildDecals();
+    }
     this.ready = true;
     this.applyDensity(Engine.q.density);
-    this.applyTime(Engine.preset);
+    Engine.applyTime(Engine.tod);          // 时辰预设随赛道而变，这里统一刷新（会回调 applyTime）
+  },
+  /** 卸载当前赛道场景并释放显存（共享的材质/贴图保留） */
+  unload() {
+    const keepM = new Set(Object.values(Engine.mats)), keepT = new Set(Object.values(Engine.tex));
+    this.root.traverse((o) => {
+      if (o.geometry) o.geometry.dispose();
+      const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      for (const m of ms) { if (keepM.has(m)) continue; if (m.map && !keepT.has(m.map)) m.map.dispose(); m.dispose(); }
+    });
+    Engine.scene.remove(this.root);
+    if (this.desert) Desert.unload(this);
+    this.root = this.trackGroup = null; this.chunks = []; this.mountains = []; this.bakeLevel = -1; this.padTex = null;
+    this.skyLan = null; this.housesMesh = this.treesMesh = this.cityLights = this.glowPoints = null;
+    this.ready = false;
   },
 
   /* ---------- 城墙主体（按昼夜烘焙灯笼光晕） ---------- */
@@ -5922,7 +6025,8 @@ const World = {
     const dm = (tex, opts) => new THREE.MeshBasicMaterial(Object.assign({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }, opts));
     // 起点线：朱金方格
     const chk = canvasTex(128, 32, (g) => { for (let y = 0; y < 2; y++) for (let x = 0; x < 8; x++) { g.fillStyle = (x + y) % 2 ? '#f3d27a' : '#8a1a12'; g.fillRect(x * 16, y * 16, 16, 16); } });
-    const sl = new THREE.Mesh(strip(-1.2, 2.4, -HALF_W, HALF_W, 0.05, 1), dm(chk)); sl.renderOrder = 2; this.root.add(sl);
+    const hw0 = T.rw ? T.rw[0] : HALF_W;
+    const sl = new THREE.Mesh(strip(-1.2, 2.4, -hw0, hw0, 0.05, 1), dm(chk)); sl.renderOrder = 2; this.root.add(sl);
     // 检查点线
     const ck = canvasTex(64, 16, (g) => { g.fillStyle = 'rgba(246,211,122,0.85)'; g.fillRect(0, 4, 64, 8); });
     for (const c of F.checkpoints) { const m = new THREE.Mesh(strip(c.s - 0.6, 1.2, -HALF_W, HALF_W, 0.05, 1), dm(ck)); m.renderOrder = 2; this.root.add(m); }
@@ -5933,15 +6037,17 @@ const World = {
       for (const y of [8, 40]) { g.beginPath(); g.moveTo(6, y + 20); g.lineTo(32, y); g.lineTo(58, y + 20); g.stroke(); }
     });
     const pm = dm(this.padTex, { blending: THREE.AdditiveBlending, opacity: 0.95 });
-    for (const p of F.pads) { const m = new THREE.Mesh(strip(p.s, p.len, p.d - 2.4, p.d + 2.4, 0.06, p.len / 4), pm); m.renderOrder = 3; this.root.add(m); }
+    for (const p of F.pads) { const w = p.hw || 2.4, m = new THREE.Mesh(strip(p.s, p.len, p.d - w, p.d + w, 0.06, p.len / 4), pm); m.renderOrder = 3; this.root.add(m); }
   },
 
   applyDensity(d) {
     this.density = d;
+    if (this.desert) { Desert.applyDensity(this, d); return; }
     if (this.housesMesh) this.housesMesh.count = Math.max(1, Math.floor(this.houseCount * d));
     if (this.treesMesh) this.treesMesh.count = Math.max(1, Math.floor(this.treeCount * d));
   },
   applyTime(P) {
+    if (this.desert) { Desert.applyTime(this, P); return; }
     this.rebuildTrack(P.bake);
     this.glowMat.opacity = P.glow; this.cityMat.opacity = P.cityLights * 0.85;
     this.skyLanMat.opacity = 0.5 + 0.5 * P.stars;
@@ -5949,6 +6055,7 @@ const World = {
   },
   update(time) {
     if (this.padTex) this.padTex.offset.y = (time * 1.6) % 1;
+    if (this.desert) Desert.update(this, time);
     if (this.skyLan) {
       const a = this.skyLan.geometry.attributes.position, p = a.array;
       for (let i = 0; i < this.skyLanSeed.length; i++) {
@@ -5957,6 +6064,885 @@ const World = {
       }
       a.needsUpdate = true;
     }
+  },
+};
+
+/* ============================================================================
+ * 二（续）· 沙漠遗迹：半开放赛道。闭环中心线仍驱动进度/名次/AI/小地图/复位，
+ * 另有地形高度场、地表栅格（石板/硬沙/软沙/浅水/石台）、障碍物、检查门与沙地近路。
+ * 坐标：x 向东，z 向南；起点在南侧绿洲，逆时针（先向东）。
+ * ========================================================================== */
+const SURF_HARD = 0, SURF_SOFT = 1, SURF_WATER = 2, SURF_STONE = 3, SURF_ROAD = 4;
+/** 地表：速度上限系数 / 抓地系数。喷射期间无视 speed。 */
+const SURFACES = [
+  { name: '硬沙', speed: 0.85, grip: 0.72 },
+  { name: '软沙', speed: 0.55, grip: 0.46 },
+  { name: '浅水', speed: 0.7, grip: 0.6 },
+  { name: '石台', speed: 1, grip: 1 },
+  { name: '石板古道', speed: 1, grip: 1 },
+];
+
+const DESERT_CP = [
+  [-60, 2, 240],        // 0  起点拱门（绿洲直道）
+  [60, 2, 240],         // 1
+  [150, 2.4, 236],      // 2  绿洲尽头
+  [228, 4, 200],        // 3  左转入沙丘群
+  [326, 6.5, 154],      // 4  古道向东绕丘
+  [348, 8, 68],         // 5
+  [302, 9, 8],          // 6
+  [256, 9.5, -28],      // 7  丘后落点石台
+  [246, 10, -90],       // 8
+  [290, 10.5, -150],    // 9  东北外弯
+  [268, 11, -212],      // 10
+  [212, 11, -242.5],    // 11
+  [150, 11, -242.5],    // 12 断柱廊入口
+  [20, 11, -242.5],     // 13 断柱廊出口
+  [-50, 10.5, -242.5],  // 14 沉没神殿入口
+  [-110, 3, -242.5],    // 15 殿内
+  [-180, 3, -242.5],    // 16 斜梁起点
+  [-240, 9, -242.5],    // 17 屋顶破洞
+  [-266, 8.8, -242.5],  // 18
+  [-318, 8.5, -226],    // 19 落地后左转
+  [-364, 8, -186],      // 20
+  [-398, 7.5, -122],    // 21 西侧外弯
+  [-345, 7, -45],       // 22
+  [-285, 6.5, 30],      // 23
+  [-324, 6, 84],        // 24 巨像回廊入弯
+  [-350, 5, 146],       // 25
+  [-324, 4, 208],       // 26
+  [-262, 3, 234],       // 27 出弯
+  [-160, 2.2, 239.5],   // 28 终点直道
+];
+
+function setupDesertTrack(T, at) {
+  const { N, ds, L, px, py, pz, tx, tz, rx, rz, W } = T, F = T.features, cpS = T.cpS;
+  const fwd = (s, s0) => (((s - s0) % L) + L) % L;
+  /** s 是否落在 [s0, s1]（沿前进方向）内：返回 0~1，两端各有 taper 米的过渡 */
+  const zoneK = (s, s0, s1, taper) => {
+    const len = fwd(s1, s0), u = fwd(s, T.wrapS(s0 - taper));
+    if (u > len + 2 * taper) return 0;
+    return smooth(0, 1, Math.min(1, u / taper, (len + 2 * taper - u) / taper));
+  };
+  const P0 = { x: 0, y: 0, z: 0 };
+  const posXZ = (s, d) => { const p = T.posAt(s, d || 0, P0); return [p.x, p.z]; };
+  /** 北侧长直道（柱廊→神殿）上，世界 x 对应的 s */
+  const sX = (x) => T.wrapS(cpS[12] + (150 - x));
+  const TEMPLE_Z = -242.5, HALL = 12.5;
+
+  /* ---------- 1) 路宽：绿洲宽直道 / 柱廊广场 / 神殿大厅 ---------- */
+  const rw = T.rw = new Float32Array(N).fill(T.halfW);
+  const widen = (s0, s1, w, taper) => { for (let i = 0; i < N; i++) { const k = zoneK(i * ds, s0, s1, taper); if (k > 0) rw[i] = Math.max(rw[i], lerp(T.halfW, w, k)); } };
+  widen(at(28, 30), at(2, -30), 10, 24);
+  widen(sX(126), sX(18), 17, 16);
+  widen(sX(-34), sX(-244), HALL, 10);
+
+  /* ---------- 2) 高程：神殿下沉剖面（入口坡道 → 殿内平地 → 碎石坡出殿） ---------- */
+  const templeY = (x) => {
+    if (x > -46) return 10.5;
+    if (x > -106) return lerp(10.5, 3, smooth(-46, -106, x));
+    if (x > -176) return 3;
+    return lerp(3, 9, smooth(-176, -238, x));
+  };
+  for (let i = 0; i < N; i++) { const k = zoneK(i * ds, sX(-30), sX(-250), 26); if (k > 0) py[i] = lerp(py[i], templeY(px[i]), k); }
+
+  /* ---------- 3) 检查门（石拱门，必须按顺序通过）与终点门 ---------- */
+  const gate = (s, hw, name) => { const i = T.idx(s); return { s, i, hw, name, x: px[i], y: py[i], z: pz[i], tx: tx[i], tz: tz[i], rx: rx[i], rz: rz[i] }; };
+  F.gates = [
+    gate(at(2, 0), 11.5, '绿洲门'), gate(at(8, -16), 11, '落丘门'), gate(sX(142), 11, '柱廊门'), gate(sX(-26), 13, '神殿门'),
+    gate(at(19, 0), 11, '出殿门'), gate(at(23, 6), 11, '巨像门'), gate(at(27, 0), 11, '回廊门'),
+  ];
+  F.finish = gate(0, 12, '终点');
+  F.checkpoints = [];                    // 分段计时改由检查门给出
+  F.jump = null; F.gaps = []; F.corners = []; F.bastions = []; F.lanterns = [];
+
+  /* ---------- 4) 沙地近路（AI 也按这些折线走；小地图不显示） ---------- */
+  const branch = (id, s0, s1, way, opts) => {
+    // 两端各借中心线上的两个点，保证与古道相切；Catmull-Rom 加密后按 2 米重采样
+    const pts = [posXZ(s0 - 16), posXZ(s0)].concat(way, [posXZ(s1), posXZ(s1 + 16)]), dense = [];
+    for (let i = 1; i < pts.length - 2; i++) {
+      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
+      for (let j = 0; j < 24; j++) {
+        const t = j / 24, t2 = t * t, t3 = t2 * t;
+        dense.push([0.5 * (2 * p1[0] + (p2[0] - p0[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (3 * p1[0] - p0[0] - 3 * p2[0] + p3[0]) * t3),
+          0.5 * (2 * p1[1] + (p2[1] - p0[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (3 * p1[1] - p0[1] - 3 * p2[1] + p3[1]) * t3)]);
+      }
+    }
+    dense.push(pts[pts.length - 2]);
+    const cum = [0]; for (let i = 1; i < dense.length; i++) cum.push(cum[i - 1] + Math.hypot(dense[i][0] - dense[i - 1][0], dense[i][1] - dense[i - 1][1]));
+    const len = cum[cum.length - 1], n = Math.max(2, Math.round(len / 2)), bx = new Float32Array(n + 1), bz = new Float32Array(n + 1);
+    for (let i = 0, j = 0; i <= n; i++) {
+      const u = (len * i) / n; while (j < dense.length - 2 && cum[j + 1] < u) j++;
+      const t = (u - cum[j]) / Math.max(1e-6, cum[j + 1] - cum[j]);
+      bx[i] = lerp(dense[j][0], dense[j + 1][0], t); bz[i] = lerp(dense[j][1], dense[j + 1][1], t);
+    }
+    return Object.assign({ id, s0: T.wrapS(s0), s1: T.wrapS(s1), len, n, step: len / n, bx, bz, road: fwd(s1, s0) }, opts);
+  };
+  F.branches = [
+    branch('dune', at(3, -28), at(7, 34), [[233, 168], [247, 112], [252, 62], [253, 22], [254, -14]], { name: '沙丘飞跃', jump: true }),
+    branch('ne', at(8, 6), at(11, 26), [[240, -134], [227, -188], [210, -224]], { name: '东北沙地' }),
+    branch('west', at(19, 12), at(23, -14), [[-334, -150], [-322, -60]], { name: '西侧沙地' }),
+  ];
+  /** 点到近路折线的最近距离 */
+  const distBranch = (x, z) => {
+    let m = 1e12;
+    for (const b of F.branches) for (let i = 0; i <= b.n; i += 2) { const dx = b.bx[i] - x, dz = b.bz[i] - z, d = dx * dx + dz * dz; if (d < m) m = d; }
+    return Math.sqrt(m);
+  };
+
+  /* ---------- 5) 石台（近路上的接力石台、丘后落点）：平整地形 + 100% 速度 ---------- */
+  // { x, z, ux, uz（长轴方向）, hl 半长, hw 半宽 }
+  const slabAt = (b, frac, hl, hw) => {
+    const i = clamp(Math.round(b.n * frac), 1, b.n - 1), dx = b.bx[i + 1] - b.bx[i - 1], dz = b.bz[i + 1] - b.bz[i - 1], l = Math.hypot(dx, dz) || 1;
+    return { x: b.bx[i], z: b.bz[i], ux: dx / l, uz: dz / l, hl, hw };
+  };
+  F.slabs = [
+    { x: 254, z: -18, ux: 0, uz: -1, hl: 23, hw: 13 },                       // 沙丘飞跃的落点
+    slabAt(F.branches[1], 0.3, 13, 7), slabAt(F.branches[1], 0.72, 11, 6),
+    slabAt(F.branches[2], 0.3, 14, 7), slabAt(F.branches[2], 0.66, 12, 6.5),
+  ];
+  const slabDist = (sl, x, z) => {      // 到石台矩形的距离（内部为 0）
+    const dx = x - sl.x, dz = z - sl.z, a = Math.abs(dx * sl.ux + dz * sl.uz) - sl.hl, b = Math.abs(-dx * sl.uz + dz * sl.ux) - sl.hw;
+    return Math.hypot(Math.max(a, 0), Math.max(b, 0));
+  };
+
+  /* ---------- 6) 水池（绿洲浅水：可过但减速）与指定的软沙区 ---------- */
+  F.pools = [{ x: -30, z: 268, rx: 44, rz: 13 }, { x: 84, z: 211, rx: 40, rz: 13 }, { x: 176, z: 266, rx: 26, rz: 11 }, { x: -150, z: 213, rx: 26, rz: 10 }];
+  const softE = [
+    { x: 226, z: -6, rx: 13, rz: 30 }, { x: 283, z: -34, rx: 12, rz: 26 },   // 落点两侧
+    { x: 72, z: -278, rx: 76, rz: 12 }, { x: 72, z: -207, rx: 76, rz: 12 },  // 柱廊两侧
+    { x: -262, z: 150, rx: 60, rz: 60 },                                     // 巨像周围
+  ];
+  // 近路上横着的软沙带：喷着氮气才能不减速冲过去 { 近路序号, 位置比例, 半长 }
+  const softBands = [[1, 0.5, 12], [2, 0.49, 10]];
+  const ell = (e, x, z) => { const a = (x - e.x) / e.rx, b = (z - e.z) / e.rz; return a * a + b * b; };
+
+  /* ---------- 7) 障碍物：石柱（圆）、神殿墙（矩形）、巨像、门柱 ---------- */
+  const obs = T.obs = [], boxes = T.boxes = [];
+  // 断柱廊：四排石柱分出宽、窄、中三条线（d>0 为北侧）
+  const COL_R = 1.5, rows = [-15, -3, 5, 14.5];
+  F.columns = [];
+  for (let r = 0; r < rows.length; r++) for (let k = 0; k < 8; k++) {
+    const x = 118 - k * 13 - (r % 3 === 0 ? 6.5 : 0), z = TEMPLE_Z - rows[r];
+    F.columns.push({ x, z, r: COL_R, row: r, h: 0 }); obs.push({ x, z, r: COL_R });
+  }
+  // 三条线的可行驶范围（留出车身半宽）：宽线 / 窄线 / 中线
+  F.lanes = { s0: sX(128), s1: sX(18), list: [[-12.3, -5.7], [-0.2, 2.2], [7.8, 11.8]], center: [-9, 1, 9.75] };   // 给柱子留出约 0.3 米余量
+  // 沉没神殿：两侧厚墙（大厅内宽 2×HALL）
+  F.temple = { z: TEMPLE_Z, hall: HALL, x0: -36, x1: -238, roof0: -40, roof1: -168, wall: 5, y: templeY };
+  boxes.push({ x0: F.temple.x1, x1: F.temple.x0, z0: TEMPLE_Z - HALL - 5, z1: TEMPLE_Z - HALL });
+  boxes.push({ x0: F.temple.x1, x1: F.temple.x0, z0: TEMPLE_Z + HALL, z1: TEMPLE_Z + HALL + 5 });
+  // 倒卧巨像：躺在回廊弯心。parts: [沿身体方向 a, 横向 b, 半径]
+  F.colossus = { x: -262, z: 150, rot: 0.5, parts: [[-36, 0, 5], [-27, 0.5, 5.5], [-18, 0, 6], [-8, 0, 7.5], [2, 0, 8], [12, 0, 7.5], [30, 4, 6.5], [8, -13, 4], [-2, 13.5, 4]] };
+  { const c = Math.cos(F.colossus.rot), s = Math.sin(F.colossus.rot);
+    for (const p of F.colossus.parts) obs.push({ x: F.colossus.x + p[0] * c - p[1] * s, z: F.colossus.z + p[0] * s + p[1] * c, r: p[2] }); }
+  // 门柱
+  for (const g of F.gates.concat([F.finish])) for (const sd of [-1, 1]) { const o = g.hw + 1.6; obs.push({ x: g.x + g.rx * sd * o, z: g.z + g.rz * sd * o, r: 1.5 }); }
+
+  /* ---------- 8) 跳台：沙丘顶的石板、神殿里塌落的斜梁（斜面，侧面是实体） ---------- */
+  // { x, z 起点中心, ux, uz 方向, len, hw, y0, y1 }：y0/y1 在高度场建好后补上
+  const DUNE = { x: 253, z: 22, h: 6.2 };                 // 丘顶位置与高度
+  T.ramps = [
+    { x: 253, z: 22 + 14, ux: 0, uz: -1, len: 13, hw: 4.6, rise: 1.5 },
+    { x: -180, z: TEMPLE_Z, ux: -1, uz: 0, len: 48, hw: 4.5, rise: 3.7 },
+  ];
+
+  /* ---------- 9) 地形高度场（5 米网格；渲染与物理共用同一套三角面） ---------- */
+  const G = T.grid = { x0: -480, z0: -340, cell: 5, nx: 180, nz: 134 };
+  const GW = G.nx + 1, GH = G.nz + 1;
+  const H = G.H = new Float32Array(GW * GH), DM = G.DM = new Float32Array(GW * GH), DB = G.DB = new Float32Array(GW * GH);
+  const n1 = makeNoise2(41), n2 = makeNoise2(53), n3 = makeNoise2(67);
+  /** 远离古道处的沙丘起伏 */
+  const dunes = T.dunes = (x, z) => {
+    const r1 = 1 - Math.abs(2 * n1(x / 150 + 3.1, z / 105 + 7.7) - 1), r2 = 1 - Math.abs(2 * n2(x / 62 + 11, z / 48 + 5) - 1);
+    return r1 * r1 * 13 + r2 * r2 * 3.2 + (n3(x / 23, z / 23) - 0.5) * 0.8 - 3.4;
+  };
+  const duneJump = (x, z) => {
+    const u = DUNE.z - z, v = x - DUNE.x;
+    const a = u < 0 ? Math.pow(smooth(-88, 0, u), 1.25) : 1 - smooth(0, 17, u);
+    return DUNE.h * a * Math.exp(-(v * v) / (44 * 44));
+  };
+  for (let gz = 0; gz < GH; gz++) for (let gx = 0; gx < GW; gx++) {
+    const x = G.x0 + gx * G.cell, z = G.z0 + gz * G.cell, k = gz * GW + gx;
+    let dm = 1e12, im = 0, sw = 0, sh = 0;
+    for (let i = 0; i < N; i += 2) {
+      const dx = px[i] - x, dz = pz[i] - z, d = dx * dx + dz * dz;
+      if (d < dm) { dm = d; im = i; }
+      const w = 1 / ((d + 900) * (d + 900)); sw += w; sh += w * py[i];
+    }
+    dm = Math.sqrt(dm);
+    const db = distBranch(x, z), w = rw[im], off = dm - w;
+    DM[k] = dm; DB[k] = db;
+    // 古道附近贴着路面（略低，沙面在石板之下），向外过渡到平滑的基准面，再叠加沙丘
+    let h = lerp(py[im], sh / sw, smooth(6, 46, off)) - 0.22;
+    h += dunes(x, z) * smooth(10, 90, off) * smooth(9, 48, db);
+    h += duneJump(x, z) * smooth(3, 24, off);
+    // 神殿半埋：墙外是高处的地面
+    const tk = smooth(-250, -226, x) * smooth(-26, -44, x) * smooth(64, 34, Math.abs(z - TEMPLE_Z));
+    if (tk > 0 && Math.abs(z - TEMPLE_Z) > HALL + 0.1) h = lerp(h, lerp(10.4, 9.2, smooth(-40, -240, x)) + (n3(x / 19, z / 19) - 0.5) * 0.5, tk * smooth(HALL, HALL + 5, Math.abs(z - TEMPLE_Z)));
+    for (const p of F.pools) { const e = ell(p, x, z); if (e < 1.6) h -= 0.75 * smooth(1.25, 0.5, e); }
+    if (off < 1) h = py[im] - 0.5;                        // 路面正下方再压低，避免与石板穿插
+    H[k] = h;
+  }
+  // 石台：把周围地形压平到石台中心的高度
+  for (const sl of F.slabs) {
+    const gx = clamp(Math.round((sl.x - G.x0) / G.cell), 0, G.nx), gz = clamp(Math.round((sl.z - G.z0) / G.cell), 0, G.nz);
+    let y = H[gz * GW + gx];
+    if (sl === F.slabs[0]) y = py[T.idx(at(7, 10))] - 0.22;
+    sl.y = y;
+    const R = Math.hypot(sl.hl, sl.hw) + 14;
+    for (let j = Math.max(0, Math.floor((sl.z - R - G.z0) / G.cell)); j <= Math.min(G.nz, Math.ceil((sl.z + R - G.z0) / G.cell)); j++)
+      for (let i = Math.max(0, Math.floor((sl.x - R - G.x0) / G.cell)); i <= Math.min(G.nx, Math.ceil((sl.x + R - G.x0) / G.cell)); i++) {
+        const k = j * GW + i, d = slabDist(sl, G.x0 + i * G.cell, G.z0 + j * G.cell);
+        H[k] = lerp(H[k], y, smooth(13, 6.5, d) * smooth(9, 16, DM[k]));   // 古道边上的地形仍然跟着路面
+      }
+  }
+  /** 高度场取样（与渲染网格同一种三角剖分） */
+  const gridY = T.gridY = (x, z) => {
+    let fx = (x - G.x0) / G.cell, fz = (z - G.z0) / G.cell;
+    fx = fx < 0 ? 0 : fx > G.nx - 0.001 ? G.nx - 0.001 : fx; fz = fz < 0 ? 0 : fz > G.nz - 0.001 ? G.nz - 0.001 : fz;
+    const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, k = iz * GW + ix;
+    const a = H[k], b = H[k + 1], d = H[k + GW], e = H[k + GW + 1];
+    return u + v <= 1 ? a + u * (b - a) + v * (d - a) : e + (1 - u) * (d - e) + (1 - v) * (b - e);
+  };
+  const gridLerp = (A, x, z) => {
+    let fx = (x - G.x0) / G.cell, fz = (z - G.z0) / G.cell;
+    fx = fx < 0 ? 0 : fx > G.nx - 0.001 ? G.nx - 0.001 : fx; fz = fz < 0 ? 0 : fz > G.nz - 0.001 ? G.nz - 0.001 : fz;
+    const ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, k = iz * GW + ix;
+    return lerp(lerp(A[k], A[k + 1], u), lerp(A[k + GW], A[k + GW + 1], u), v);
+  };
+  // 跳台两端的高度
+  { const r = T.ramps[0]; r.y0 = gridY(r.x, r.z); r.y1 = gridY(r.x + r.ux * r.len, r.z + r.uz * r.len) + r.rise; }
+  { const r = T.ramps[1]; r.y0 = templeY(r.x) - 0.02; r.y1 = templeY(r.x + r.ux * r.len) + r.rise; }
+
+  /* ---------- 10) 地表栅格（1 米）：软沙 / 浅水 / 石台 / 石板 ---------- */
+  const SW = T.surfW = G.nx * G.cell, SH = T.surfH = G.nz * G.cell, surf = T.surf = new Uint8Array(SW * SH);
+  const nS = makeNoise2(88), nE = makeNoise2(97);
+  const bands = softBands.map(([bi, f, hl]) => { const b = F.branches[bi], i = clamp(Math.round(b.n * f), 1, b.n - 1), dx = b.bx[i + 1] - b.bx[i - 1], dz = b.bz[i + 1] - b.bz[i - 1], l = Math.hypot(dx, dz); return { x: b.bx[i], z: b.bz[i], ux: dx / l, uz: dz / l, hl }; });
+  F.softBands = bands;
+  for (let j = 0; j < SH; j++) for (let i = 0; i < SW; i++) {
+    const x = G.x0 + i + 0.5, z = G.z0 + j + 0.5;
+    const dRoute = Math.min(gridLerp(DM, x, z) - 7.5, gridLerp(DB, x, z) - 3);
+    let c = dRoute + (nS(x / 34, z / 34) - 0.5) * 26 + (nS(x / 9 + 40, z / 9) - 0.5) * 5 > 30 ? SURF_SOFT : SURF_HARD;
+    const wob = 1 + (nE(x / 13, z / 13) - 0.5) * 0.5;
+    for (const e of softE) if (ell(e, x, z) * wob < 1) c = SURF_SOFT;
+    for (const b of bands) { const dx = x - b.x, dz = z - b.z, a = dx * b.ux + dz * b.uz, w = -dx * b.uz + dz * b.ux; if (Math.abs(a) < b.hl * (0.8 + 0.4 * nE(w / 11 + 5, a / 30)) && Math.abs(w) < 46) c = SURF_SOFT; }
+    for (const p of F.pools) if (ell(p, x, z) * wob < 1) c = SURF_WATER;
+    surf[j * SW + i] = c;
+  }
+  for (const sl of F.slabs) {
+    const R = Math.ceil(Math.hypot(sl.hl, sl.hw)) + 1;
+    for (let j = Math.floor(sl.z - R - G.z0); j <= sl.z + R - G.z0; j++) for (let i = Math.floor(sl.x - R - G.x0); i <= sl.x + R - G.x0; i++)
+      if (i >= 0 && j >= 0 && i < SW && j < SH && slabDist(sl, G.x0 + i + 0.5, G.z0 + j + 0.5) <= 0) surf[j * SW + i] = SURF_STONE;
+  }
+  for (let q = 0; q < N; q++) {          // 石板古道：逐段按到线段的距离盖章
+    const k = W(q + 1), ax = px[q], az = pz[q], bx = px[k] - ax, bz = pz[k] - az, l2 = bx * bx + bz * bz, wq = Math.max(rw[q], rw[k]);
+    const i0 = Math.floor(Math.min(ax, px[k]) - wq - G.x0), i1 = Math.ceil(Math.max(ax, px[k]) + wq - G.x0), j0 = Math.floor(Math.min(az, pz[k]) - wq - G.z0), j1 = Math.ceil(Math.max(az, pz[k]) + wq - G.z0);
+    for (let j = Math.max(0, j0); j < Math.min(SH, j1); j++) for (let i = Math.max(0, i0); i < Math.min(SW, i1); i++) {
+      const x = G.x0 + i + 0.5 - ax, z = G.z0 + j + 0.5 - az, t = clamp((x * bx + z * bz) / l2, 0, 1), w = lerp(rw[q], rw[k], t);
+      if ((x - bx * t) * (x - bx * t) + (z - bz * t) * (z - bz * t) <= w * w) surf[j * SW + i] = SURF_ROAD;
+    }
+  }
+  /** 世界坐标处的地表类型 */
+  T.surfAt = (x, z) => {
+    const i = Math.floor(x - G.x0), j = Math.floor(z - G.z0);
+    return (i < 0 || j < 0 || i >= SW || j >= SH) ? SURF_SOFT : surf[j * SW + i];
+  };
+  /** 离路线的距离（中心线，或近路 +20 米）：超过 60 米判越界 */
+  T.routeDist = (x, z) => {
+    if (x < G.x0 || z < G.z0 || x > G.x0 + SW || z > G.z0 + SH) return 999;
+    return Math.min(gridLerp(DM, x, z), gridLerp(DB, x, z) + 20);
+  };
+
+  /* ---------- 11) 查询：开放地形下的投影与地面 ---------- */
+  const localProject = T.project;
+  /** 投影到中心线。离开古道后再做一次全局粗搜，换到明显更近的路段（抄近路时进度随之跳转） */
+  T.project = function (x, z, hint, out) {
+    localProject(x, z, hint, out);
+    if (hint < 0) return out;
+    const d0 = Math.abs(out.d);
+    if (d0 < rw[out.i] + 4) return out;
+    let best = d0 * d0, bi = -1;
+    for (let i = 0; i < N; i += 3) { const dx = px[i] - x, dz = pz[i] - z, dd = dx * dx + dz * dz; if (dd < best) { best = dd; bi = i; } }
+    if (bi >= 0 && Math.sqrt(best) < d0 - 5) localProject(x, z, bi, out);
+    return out;
+  };
+  /** 车辆脚下的地面：古道上取路面，路肩 3 米内向高度场过渡；跳台只在车已经够高时才算地面 */
+  T.groundK = function (x, z, i, t, d, ky) {
+    const road = lerp(py[i], py[W(i + 1)], t), w = lerp(rw[i], rw[W(i + 1)], t), ad = d < 0 ? -d : d;
+    let g = road;
+    if (ad > w) { g = gridY(x, z); if (ad < w + 3) g = lerp(road, g, (ad - w) / 3); }
+    for (const r of T.ramps) {
+      const dx = x - r.x, dz = z - r.z, a = dx * r.ux + dz * r.uz, b = -dx * r.uz + dz * r.ux;
+      if (a < 0 || a > r.len || b < -r.hw || b > r.hw) continue;
+      const ry = r.y0 + (r.y1 - r.y0) * (a / r.len);
+      if (ry > g && ry - ky < 0.7) g = ry;
+    }
+    return g;
+  };
+  /** 沿车头方向的坡度（俯仰与上下坡加减速用） */
+  T.slopeK = function (x, z, i, d, h, ky) {
+    const fx = Math.sin(h), fz = Math.cos(h), ad = d < 0 ? -d : d, w = rw[i];
+    const sRoad = ((py[W(i + 1)] - py[i]) / ds) * (fx * tx[i] + fz * tz[i]);
+    let s = sRoad;
+    if (ad > w) { s = (gridY(x + fx * 1.5, z + fz * 1.5) - gridY(x - fx * 1.5, z - fz * 1.5)) / 3; if (ad < w + 3) s = lerp(sRoad, s, (ad - w) / 3); }
+    for (const r of T.ramps) {
+      const dx = x - r.x, dz = z - r.z, a = dx * r.ux + dz * r.uz, b = -dx * r.uz + dz * r.ux;
+      if (a < 0 || a > r.len || b < -r.hw || b > r.hw) continue;
+      const ry = r.y0 + (r.y1 - r.y0) * (a / r.len);
+      if (ry - ky < 0.7 && ky - ry < 0.5) s = ((r.y1 - r.y0) / r.len) * (fx * r.ux + fz * r.uz);
+    }
+    return clamp(s, -0.7, 0.7);
+  };
+  /** 任意点的地面高度（相机、粒子、布景用；较慢） */
+  const _gp = { i: 0, t: 0, s: 0, d: 0, nx: 0, nz: 0 };
+  T.groundXZ = function (x, z, hint) {
+    T.project(x, z, hint == null ? -1 : hint, _gp);
+    return T.groundK(x, z, _gp.i, _gp.t, _gp.d, 1e9);
+  };
+  T.groundAt = function (i, t, d) { return lerp(py[i], py[W(i + 1)], t); };
+  /** 复位点：避开斜梁飞出段 */
+  const beam0 = sX(-170), beam1 = sX(-262);
+  T.respawnS = function (s) { s = T.wrapS(s); return (fwd(s, beam0) < fwd(beam1, beam0)) ? T.wrapS(beam0 - 14) : s; };
+
+  /* ---------- 12) 道具箱、加速带、AI 分区 ---------- */
+  F.itemRows = [at(1, 0), at(4, 30), at(9, 0), { s: sX(70), lanes: [8.3, 11.2, -7, -11] }, sX(-140), at(21, 0), at(25, 0)];
+  F.pads = [
+    { s: at(9, 6), len: 12, d: 0 }, { s: sX(100), len: 14, d: 1, hw: 1.8 }, { s: at(21, 40), len: 12, d: 0 }, { s: at(28, 20), len: 12, d: 0 },
+  ];
+  for (const p of F.pads) { p.s = T.wrapS(p.s); p.i = T.idx(p.s); }
+  // 走线约束（自动驾驶与 AI 共用）：窄处必须收拢到中线
+  F.zones = [{ s0: sX(-150), s1: sX(-236), lo: -2.6, hi: 2.6 }];
+  F.storm = { lap: 1 };                  // 第 2 圈（lap 下标 1）触发一次沙暴
+  F.sX = sX;
+}
+
+TRACKS.desert = {
+  id: 'desert', name: '沙漠遗迹', blurb: '没有护栏的石板古道：沙地可抄近路，七座拱门须按序通过。',
+  cp: DESERT_CP, halfW: 7.5, open: true, setup: setupDesertTrack,
+  scenery: 'desert', music: 'desert', time: null,
+  map: { fit: 0.8, road: '#b98a45', line: '#fff3cf' },
+  title: ['沙海遗迹 · 漂移竞速', '石板为径 · 沙海为野 · 七门定胜负'], loading: '正在堆起沙丘…', noRecord: '尚无成绩 · 去沙海里跑一圈吧',
+};
+
+/* ============================================================================
+ * 二（续）· 沙漠遗迹场景：沙丘地形（贴图标出软硬沙）、石板古道、石拱门、断柱廊、
+ * 沉没神殿、倒卧巨像、绿洲。全部程序化生成；装饰物实例化，其余合批。
+ * ========================================================================== */
+const DESERT_TIME = {
+  dusk: {   // 橙红低角度阳光，长影子
+    zen: 0x35397f, mid: 0xd66a66, hor: 0xffa455, sun: 0xffc27a, disc: 0.9989, sunAmt: 1.15,
+    sunDir: [-0.82, 0.19, -0.33],
+    dirCol: 0xff9a58, dirInt: 2.9, hemiSky: 0xd9b596, hemiGnd: 0x8a5a38, hemiInt: 1.5,
+    fog: 0xee9f66, fogNear: 240, fogFar: 2500, stars: 0.0,
+    mount: [0x9c5f66, 0x744a6c], lantern: 0.8, glow: 0.34, bake: 0.3, headlamp: 0, cityLights: 0.4,
+    water: 0x86b4b4, shadow: 0.4, storm: 0xc48a52, dust: 1.0,
+  },
+  night: {  // 深蓝星空，火盆与绿洲灯光是暖色点缀
+    zen: 0x030616, mid: 0x0a1540, hor: 0x1f2f66, sun: 0xdfe8ff, disc: 0.9996, sunAmt: 0.6,
+    sunDir: [0.42, 0.5, -0.52],
+    dirCol: 0x8fa8ff, dirInt: 0.95, hemiSky: 0x4a5e9e, hemiGnd: 0x2a2030, hemiInt: 1.3,
+    fog: 0x141d40, fogNear: 170, fogFar: 2000, stars: 1.0,
+    mount: [0x101a3a, 0x0a1230], lantern: 1.0, glow: 1.0, bake: 1.0, headlamp: 1, cityLights: 1.0,
+    water: 0x1d3c5c, shadow: 0.22, storm: 0x3c3028, dust: 0.42,
+  },
+};
+TRACKS.desert.time = DESERT_TIME;
+
+const DPAL = {
+  slab: 0xecd29a, slabEdge: 0xb89a6c, stone: 0xdcc08e, stoneDark: 0x8f7959, inner: 0x5e4f3e, rubble: 0xa48a66,
+  trunk: 0x7c5834, leaf: 0x4f8f3e, leafDark: 0x2f6c36, fire: 0xff7a1c, ember: 0xffc24a, gold: 0xe8b84a,
+  cloth: [0xb3261e, 0x1f6f78, 0xe8b84a, 0xd8cfc0], wood: 0x5a3a26, softFar: 0x9c6b3e, sandFar: 0xcfa86c,
+};
+const dcol = (k) => DPAL['_' + k] || (DPAL['_' + k] = COL(DPAL[k]));
+
+/** 竖直圆柱/圆台（带世界尺度 UV），可选顶盖 */
+function cylQ(mb, M, cx, y0, cz, r0, r1, h, seg, c, cTop, cap) {
+  const us = 1 / 2.8, P = (x, y, z) => xf(M, x, y, z);
+  for (let k = 0; k < seg; k++) {
+    const a0 = (k / seg) * TAU, a1 = ((k + 1) / seg) * TAU, am = (a0 + a1) / 2;
+    const u0 = (k / seg) * TAU * r0 * us, u1 = ((k + 1) / seg) * TAU * r0 * us;
+    mb.quad(P(cx + Math.cos(a0) * r1, y0 + h, cz + Math.sin(a0) * r1), P(cx + Math.cos(a1) * r1, y0 + h, cz + Math.sin(a1) * r1),
+      P(cx + Math.cos(a1) * r0, y0, cz + Math.sin(a1) * r0), P(cx + Math.cos(a0) * r0, y0, cz + Math.sin(a0) * r0),
+      xd(M, Math.cos(am), 0, Math.sin(am)), cTop || c, [u0, (y0 + h) * us, u1, (y0 + h) * us, u1, y0 * us, u0, y0 * us], c);
+    if (cap) mb.quad(P(cx, y0 + h, cz), P(cx + Math.cos(a0) * r1, y0 + h, cz + Math.sin(a0) * r1), P(cx + Math.cos(a1) * r1, y0 + h, cz + Math.sin(a1) * r1), P(cx, y0 + h, cz), xd(M, 0, 1, 0), cTop || c);
+  }
+}
+
+const Desert = {
+  T: null, chunks: [], roadChunks: [], roadBake: -1, lights: [], casters: [], segCasters: [],
+  palms: null, rocks: null, shrubs: null, water: null, beam: null, glowMat: null, lampMat: null, shadowMesh: null, storm: null,
+  stormK: 0,
+
+  build(W) {
+    const T = this.T = W.T;
+    this.chunks = []; this.roadChunks = []; this.roadBake = -1; this.lights = []; this.casters = []; this.segCasters = []; this.shadowMesh = null; this.stormK = 0;
+    this.roadMat = Engine.mats.brick;
+    this.decalMat = new THREE.MeshLambertMaterial({ map: Engine.tex.brick, vertexColors: true, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+    this._props(W);          // 先布置建筑：它们决定夜里哪儿有暖光
+    this._terrain(W);
+    this._instances(W);
+    this._water(W);
+    this._beam(W);
+    this._stormFx(W);
+    W._buildMountains();
+    W._buildDecals();
+  },
+  unload() { this.chunks = []; this.roadChunks = []; this.palms = this.rocks = this.shrubs = this.water = this.beam = this.shadowMesh = this.storm = null; },
+
+  /** 某点受到的暖光强度（火盆/火把/绿洲灯），用于夜间烘焙 */
+  glowAt(x, z) {
+    let g = 0;
+    for (const l of this.lights) { const dx = l.x - x, dz = l.z - z, dd = dx * dx + dz * dz; if (dd < l.r * l.r * 9) g += l.a / (1 + dd / (l.r * l.r * 0.16)); }
+    return g;
+  },
+
+  /* ---------- 地形：内圈 5 米网格（带地表贴图）+ 外圈粗网格 ---------- */
+  _terrain(W) {
+    const T = this.T, G = T.grid, GW = G.nx + 1, GH = G.nz + 1, H = G.H;
+    // —— 地表贴图：由物理用的同一张地表栅格生成，软沙颜色明显更深 ——
+    const tw = Engine.qName === 'low' ? 512 : 1024, th = Math.round((tw * T.surfH) / T.surfW);
+    const nA = makeNoise2(7), nB = makeNoise2(19), pools = T.features.pools;
+    const tex = canvasTex(tw, th, (g, w, h) => {
+      const im = g.createImageData(w, h), d = im.data, sx = T.surfW / w, sz = T.surfH / h;
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const x = G.x0 + (i + 0.5) * sx, z = G.z0 + (j + 0.5) * sz;
+        let soft = 0, wat = 0, hardStone = 0;
+        for (let q = 0; q < 4; q++) { const c = T.surfAt(x + ((q & 1) - 0.5) * 0.6 * sx, z + ((q >> 1) - 0.5) * 0.6 * sz); if (c === SURF_SOFT) soft += 0.25; else if (c === SURF_WATER) wat += 0.25; else if (c >= SURF_STONE) hardStone += 0.25; }
+        const n = nA(x / 5, z / 5), n2 = nB(x / 33, z / 33), rip = Math.sin(x * 0.5 + z * 1.25 + n2 * 9) * 0.5 + 0.5;
+        const kH = 0.9 + n * 0.1 + rip * 0.05 + (n2 - 0.5) * 0.12;
+        let r = 224 * kH, gg = 189 * kH, b = 130 * kH;
+        if (soft > 0) { const kS = 0.84 + n * 0.14 + (rip > 0.6 ? 0.12 : 0); r = lerp(r, 148 * kS, soft); gg = lerp(gg, 96 * kS, soft); b = lerp(b, 54 * kS, soft); }
+        if (hardStone > 0) { r = lerp(r, 176, hardStone * 0.6); gg = lerp(gg, 150, hardStone * 0.6); b = lerp(b, 112, hardStone * 0.6); }
+        let gr = 0;                                      // 水池周围的绿洲草地
+        for (const p of pools) { const a = (x - p.x) / p.rx, c = (z - p.z) / p.rz, e = a * a + c * c; if (e < 3.4) gr = Math.max(gr, smooth(3.4, 1.3, e + (n - 0.5) * 0.9)); }
+        if (gr > 0 && soft < 0.5) { r = lerp(r, 98 + n * 24, gr * 0.85); gg = lerp(gg, 132 + n * 20, gr * 0.85); b = lerp(b, 62, gr * 0.85); }
+        if (wat > 0) { r = lerp(r, 96, wat); gg = lerp(gg, 118, wat); b = lerp(b, 92, wat); }
+        const k = (j * w + i) * 4; d[k] = r > 255 ? 255 : r; d[k + 1] = gg > 255 ? 255 : gg; d[k + 2] = b; d[k + 3] = 255;
+      }
+      g.putImageData(im, 0, 0);
+    }, { repeat: false });
+    const mat = new THREE.MeshLambertMaterial({ map: tex, vertexColors: true });
+    const nV = makeNoise2(23);
+    // 逐顶点：法线（中心差分，分块之间连续）、明暗、受暖光强度
+    const hAt = (i, j) => H[clamp(j, 0, G.nz) * GW + clamp(i, 0, G.nx)];
+    const CX = 3, CZ = 2, sxn = Math.ceil(G.nx / CX), szn = Math.ceil(G.nz / CZ);
+    for (let cz = 0; cz < CZ; cz++) for (let cx = 0; cx < CX; cx++) {
+      const i0 = cx * sxn, i1 = Math.min(G.nx, i0 + sxn), j0 = cz * szn, j1 = Math.min(G.nz, j0 + szn), w = i1 - i0 + 1, h = j1 - j0 + 1;
+      const pos = [], nor = [], col = [], uv = [], idx = [], glow = [];
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const x = G.x0 + i * G.cell, z = G.z0 + j * G.cell, y = H[j * GW + i];
+        let nx = -(hAt(i + 1, j) - hAt(i - 1, j)) / (2 * G.cell), nz = -(hAt(i, j + 1) - hAt(i, j - 1)) / (2 * G.cell), ny = 1; const nl = Math.hypot(nx, ny, nz);
+        pos.push(x, y, z); nor.push(nx / nl, ny / nl, nz / nl);
+        const v = 0.93 + 0.14 * nV(x / 44, z / 44);
+        col.push(v, v * 0.985, v * 0.95); uv.push((x - G.x0) / T.surfW, 1 - (z - G.z0) / T.surfH); glow.push(this.glowAt(x, z));
+      }
+      for (let j = 0; j < h - 1; j++) for (let i = 0; i < w - 1; i++) { const a = j * w + i, b = a + 1, d = a + w, e = d + 1; idx.push(a, d, b, b, d, e); }
+      // 内圈边界向下的裙边，遮住与外圈粗网格之间的缝
+      const skirt = (ia, ib, flip) => { const n = pos.length / 3; for (const q of [ia, ib]) { pos.push(pos[q * 3], pos[q * 3 + 1] - 22, pos[q * 3 + 2]); nor.push(0, 1, 0); col.push(col[q * 3], col[q * 3 + 1], col[q * 3 + 2]); uv.push(uv[q * 2], uv[q * 2 + 1]); glow.push(0); }
+        if (flip) idx.push(ia, n, ib, ib, n, n + 1); else idx.push(ia, ib, n, ib, n + 1, n); };
+      if (j0 === 0) for (let i = 0; i < w - 1; i++) skirt(i, i + 1, false);
+      if (j1 === G.nz) for (let i = 0; i < w - 1; i++) skirt((h - 1) * w + i, (h - 1) * w + i + 1, true);
+      if (i0 === 0) for (let j = 0; j < h - 1; j++) skirt(j * w, (j + 1) * w, true);
+      if (i1 === G.nx) for (let j = 0; j < h - 1; j++) skirt(j * w + w - 1, (j + 1) * w + w - 1, false);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+      g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+      g.computeBoundingSphere();
+      const m = new THREE.Mesh(g, mat); m.receiveShadow = true; W.root.add(m);
+      this.chunks.push({ mesh: m, base: new Float32Array(col), glow: new Float32Array(glow) });
+    }
+    // —— 外圈：50 米粗网格的远沙丘 ——
+    {
+      const C = 50, n = 62, o = -1550, pos = [], col = [], idx = [], id = new Int32Array((n + 1) * (n + 1)).fill(-1), c1 = dcol('softFar'), c2 = dcol('sandFar'), c = new THREE.Color();
+      const xa = G.x0, xb = G.x0 + T.surfW, za = G.z0, zb = G.z0 + T.surfH;
+      const vert = (i, j) => {
+        const k = j * (n + 1) + i; if (id[k] >= 0) return id[k];
+        const x = o + i * C, z = o + j * C, inside = x > xa + 4 && x < xb - 4 && z > za + 4 && z < zb - 4;
+        const y = 6.2 + T.dunes(x, z) * 1.2 * smooth(0, 500, Math.max(xa - x, x - xb, za - z, z - zb, 0) + 260) - (inside ? 9 : 0);
+        c.copy(c1).lerp(c2, clamp((y - 4) / 16, 0, 1) * 0.55).multiplyScalar(0.92 + 0.12 * nV(x / 120, z / 120));
+        pos.push(x, y, z); col.push(c.r, c.g, c.b); return (id[k] = pos.length / 3 - 1);
+      };
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = o + (i + 0.5) * C, z = o + (j + 0.5) * C;
+        if (x > xa + C * 0.8 && x < xb - C * 0.8 && z > za + C * 0.8 && z < zb - C * 0.8) continue;      // 被内圈盖住的格子不画
+        const a = vert(i, j), b = vert(i + 1, j), d = vert(i, j + 1), e = vert(i + 1, j + 1); idx.push(a, d, b, b, d, e);
+      }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      g.setIndex(idx); g.computeVertexNormals();
+      const m = new THREE.Mesh(g, Engine.mats.terrain); m.frustumCulled = false; W.root.add(m);
+    }
+  },
+
+  /* ---------- 石板古道（宽度随 T.rw 变化；两侧裙边压进沙里）。按昼夜烘焙火光 ---------- */
+  rebuildRoad(W, bake) {
+    if (this.roadBake === bake) return;
+    this.roadBake = bake;
+    for (const m of this.roadChunks) { W.trackGroup.remove(m); m.geometry.dispose(); }
+    this.roadChunks = [];
+    const T = this.T, { N, ds, px, py, pz, rx, rz, tx, tz, rw, W: Wr } = T, Tm = T.features.temple;
+    const cSlab = dcol('slab'), cEdge = dcol('slabEdge'), noise = makeNoise2(31), us = 1 / 2.8;
+    const cSand = COL(0xd9b67c), CH = 186, fr = [-1, -0.5, 0, 0.5, 1];
+    for (let a = 0; a < N; a += CH) {
+      const b = Math.min(N, a + CH), mb = new MeshBuilder(true), rows = [];
+      for (let q = a; q <= b; q++) {
+        const i = Wr(q), slope = (py[Wr(i + 1)] - py[Wr(i - 1)]) / (2 * ds), w = rw[i];
+        let nx = -slope * tx[i], ny = 1, nz = -slope * tz[i]; const nl = Math.hypot(nx, ny, nz); nx /= nl; ny /= nl; nz /= nl;
+        // 神殿屋顶下的路面压暗
+        const roofed = pz[i] < Tm.z + 20 && pz[i] > Tm.z - 20 ? smooth(Tm.roof0 + 10, Tm.roof0 - 12, px[i]) * smooth(Tm.roof1 - 16, Tm.roof1 + 6, px[i]) : 0, dark = 1 - 0.6 * roofed;
+        rows.push(mb.n);
+        for (let k = -1; k <= 5; k++) {
+          const skirt = k < 0 || k > 4, d = skirt ? (k < 0 ? -w - 3 : w + 3) : fr[k] * w, x = px[i] + rx[i] * d, z = pz[i] + rz[i] * d;
+          if (skirt) {                               // 裙边：沙色，略低于沙面
+            const y = Math.min(py[i] - 0.05, T.gridY(x, z) - 0.04);
+            mb.vert(x, y, z, nx, ny, nz, cSand.r * 1.18 * dark, cSand.g * 1.18 * dark, cSand.b * 1.18 * dark, 0.19, 0.06);
+          } else {
+            const edge = k === 0 || k === 4, c = edge ? cEdge : cSlab, g = this.glowAt(x, z) * bake;
+            const nv = (0.88 + 0.22 * noise(x * 0.07, z * 0.07)) * dark;
+            mb.vert(x, py[i], z, nx, ny, nz, c.r * (1 + g * 2.5) * nv, c.g * (1 + g * 1.3) * nv, c.b * (1 + g * 0.35) * nv, d * us, q * ds * us);
+          }
+        }
+      }
+      for (let q = a; q < b; q++) { const r0 = rows[q - a], r1 = rows[q - a + 1]; for (let k = 0; k < 6; k++) { mb.tri(r0 + k, r0 + k + 1, r1 + k + 1); mb.tri(r0 + k, r1 + k + 1, r1 + k); } }
+      const mesh = new THREE.Mesh(mb.build(), this.roadMat); mesh.receiveShadow = true;
+      W.trackGroup.add(mesh); this.roadChunks.push(mesh);
+    }
+  },
+
+  /* ---------- 建筑：拱门 / 断柱廊 / 神殿 / 巨像 / 石台 / 绿洲营帐与灯 ---------- */
+  _props(W) {
+    const T = this.T, F = T.features, r = makeRng(4242), I = _m4();
+    const st = new MeshBuilder(true), pl = new MeshBuilder(false), em = new MeshBuilder(false), dc = new MeshBuilder(true), glowPts = [], lampPts = [];
+    const cS = dcol('stone'), cD = dcol('stoneDark'), cIn = dcol('inner'), cFire = dcol('fire'), cEm = dcol('ember');
+    const flame = Desert._flame || (Desert._flame = new THREE.ConeGeometry(0.62, 1.9, 6));
+    /** 火盆：石钵 + 火焰（发光批）+ 光晕 + 夜间地面暖光 */
+    const brazier = (M, x, y, z, s, rad) => {
+      boxQ(st, M, x, y + 0.25 * s, z, 1.7 * s, 0.5 * s, 1.7 * s, cD, { bottom: true });
+      em.add(flame, _m4().multiplyMatrices(M, TRS(x, y + 1.3 * s, z, 0, s, s, s)), cFire);
+      em.add(flame, _m4().multiplyMatrices(M, TRS(x, y + 1.0 * s, z, 0.6, s * 0.55, s * 0.6, s * 0.55)), cEm);
+      const p = xf(M, x, y + 1.4 * s, z); glowPts.push(p[0], p[1], p[2]);
+      this.lights.push({ x: p[0], z: p[2], r: rad || 22, a: 1 });
+    };
+
+    // —— 检查门与终点门：两根方柱 + 过梁 + 柱顶火盆 ——
+    const names = [];
+    F.gates.concat([F.finish]).forEach((g, n) => {
+      const fin = g === F.finish, M = W.frameM(g.i, 0, 0, 0), o = g.hw + 1.6, top = fin ? 13.5 : 11.5, span = 2 * o + 4.6;
+      for (const sx of [-1, 1]) {
+        boxQ(st, M, sx * o, top / 2 - 1.5, 0, 3, top + 3, 3, cS, { cBot: cD });
+        boxQ(st, M, sx * o, 0.3, 0, 4.2, 1.6, 4.2, cD);
+        boxQ(st, M, sx * o, top - 0.1, 0, 3.8, 0.7, 3.8, cD, { bottom: true });
+        boxQ(st, M, sx * (o - 2.3), top - 0.9, 0, 1.6, 1.5, 2.4, cS, { bottom: true });
+        brazier(M, sx * o, top + 2.75, 0, 1.0, fin ? 26 : 24);
+        const p = xf(M, sx * o, 0, 0); this.casters.push({ x: p[0], z: p[2], h: top + 2.5, w: 3.4 });
+      }
+      boxQ(st, M, 0, top + 1.3, 0, span, 2.1, 3.3, cS, { bottom: true, cBot: cD });
+      boxQ(st, M, 0, top + 2.55, 0, span + 1.2, 0.5, 3.9, cD, { bottom: true });
+      if (fin) for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) boxQ(pl, M, sx * (3.2 + k * 3), top - 1.1, 0, 1.6, 2.6, 0.06, COL(DPAL.cloth[(k + (sx > 0 ? 1 : 0)) % 3]), { bottom: true });
+      names.push({ M, y: top + 1.3, text: fin ? '沙漠遗迹' : ['壹', '贰', '叁', '肆', '伍', '陆', '柒'][n] + ' · ' + g.name, w: fin ? 11 : 9.5 });
+      const a = xf(M, -o, 0, 0), b = xf(M, o, 0, 0); this.segCasters.push({ ax: a[0], az: a[2], bx: b[0], bz: b[2], h: top + 2.4, thin: true });
+    });
+    // 门楣题字：所有牌匾共用一张图集、合成一个网格
+    {
+      const rowH = 64, atlas = canvasTex(512, rowH * names.length, (g, w, h) => {
+        g.fillStyle = '#3b2a1c'; g.fillRect(0, 0, w, h);
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 44px "STKaiti","KaiTi","Kaiti SC","Noto Serif CJK SC","Songti SC","SimSun",serif';
+        names.forEach((nm, k) => { g.strokeStyle = '#e8b84a'; g.lineWidth = 3; g.strokeRect(4, k * rowH + 4, w - 8, rowH - 8); g.fillStyle = '#f6d98a'; g.fillText(nm.text, w / 2, k * rowH + rowH / 2 + 2); });
+      }, { repeat: false });
+      const sb = new MeshBuilder(true), cw = COL(0xffffff);
+      names.forEach((nm, k) => {
+        const v0 = 1 - (k + 1) / names.length, v1 = 1 - k / names.length, hw = nm.w / 2, hh = nm.w * 0.0625;
+        for (const sz of [-1, 1]) {
+          const P = (x, y) => xf(nm.M, x * sz, nm.y + y, sz * 1.69);
+          sb.quad(P(hw, -hh), P(-hw, -hh), P(-hw, hh), P(hw, hh), xd(nm.M, 0, 0, sz), cw, [1, v0, 0, v0, 0, v1, 1, v1]);
+        }
+      });
+      const m = new THREE.Mesh(sb.build(), new THREE.MeshBasicMaterial({ map: atlas })); W.root.add(m);
+      this.signMat = m.material;
+    }
+
+    // —— 断柱廊：四排巨柱，高矮不一；矮的断柱顶上燃着火 ——
+    {
+      const colH = [], linked = (row, k) => (row === 0 || row === 3) && (k === 1 || k === 2 || k === 5 || k === 6);
+      F.columns.forEach((c, n) => {
+        const k = n % 8, y0 = T.groundXZ(c.x, c.z, -1), broken = !linked(c.row, k) && r() < 0.36;
+        const h = linked(c.row, k) ? 14.5 : broken ? 3.4 + r() * 4.2 : 10.5 + r() * 6.5;
+        c.h = h; colH.push(h);
+        boxQ(st, I, c.x, y0 + 0.2, c.z, 3.2, 0.6, 3.2, cD);
+        cylQ(st, I, c.x, y0 + 0.6, c.z, 1.5, 1.36, h - 0.6, 10, cS, null, broken);
+        if (!broken) boxQ(st, I, c.x, y0 + h + 0.5, c.z, 3.7, 1.0, 3.7, cD, { bottom: true });
+        else if (h < 6.4) { em.add(flame, TRS(c.x, y0 + h + 1.0, c.z, 0, 0.9, 0.9, 0.9), cFire); em.add(flame, TRS(c.x, y0 + h + 0.75, c.z, 0.6, 0.5, 0.55, 0.5), cEm); glowPts.push(c.x, y0 + h + 1.1, c.z); this.lights.push({ x: c.x, z: c.z, r: 16, a: 0.8 }); }
+        this.casters.push({ x: c.x, z: c.z, h, w: 3 });
+        if (linked(c.row, k) && (k === 2 || k === 6)) boxQ(st, I, c.x + 6.5, y0 + 15.9, c.z, 17.2, 1.8, 3.2, cS, { bottom: true, cBot: cD });
+      });
+    }
+
+    // —— 沉没神殿：半埋的长殿，屋顶石板之间留着天窗；后段屋顶塌落 ——
+    {
+      const Tm = F.temple, Z = Tm.z, HL = Tm.hall, top = 19.5, seg = 14.4, n = Math.round((Tm.x0 - Tm.x1) / seg), len = (Tm.x0 - Tm.x1) / n;
+      for (let k = 0; k < n; k++) {
+        const xa = Tm.x0 - k * len, xc = xa - len / 2, open = xc < Tm.roof1;
+        for (const sz of [-1, 1]) {
+          const hTop = open ? top - 1.5 - r() * 6.5 * smooth(Tm.roof1, Tm.x1, xc) - smooth(Tm.roof1, Tm.x1, xc) * 3 : top;
+          boxQ(st, I, xc, hTop / 2 - 1, Z + sz * (HL + Tm.wall / 2), len + 0.02, hTop + 2, Tm.wall, cS, { cBot: cD });
+          if (!open) {                                // 殿内：深色内衬 + 壁柱 + 火把
+            const zi = Z + sz * (HL - 0.03);
+            st.quad([xa, top, zi], [xa - len, top, zi], [xa - len, 0, zi], [xa, 0, zi], [0, 0, -sz], cIn);
+            const fy = Tm.y(xc);
+            boxQ(st, I, xc, top / 2, Z + sz * (HL - 0.4), 2.2, top, 0.8, cD);
+            boxQ(st, I, xc, fy + 4.6, Z + sz * (HL - 1.0), 0.5, 0.5, 0.7, cD, { bottom: true });
+            em.add(flame, TRS(xc, fy + 5.35, Z + sz * (HL - 1.1), 0, 0.42, 0.5, 0.42), cFire);
+            glowPts.push(xc, fy + 5.7, Z + sz * (HL - 1.1));
+            this.lights.push({ x: xc, z: Z + sz * (HL - 3), r: 13, a: 1.15 });
+          }
+        }
+        if (!open && xa <= Tm.roof0 + 0.5) boxQ(st, I, xc, top + 0.6, Z, len - 3.4, 1.2, 2 * (HL + Tm.wall) + 1, cS, { bottom: true, cBot: cIn });
+      }
+      // 入口门楣与山花
+      boxQ(st, I, Tm.x0 - 1.7, top - 1.2, Z, 3.4, 3.6, 2 * (HL + Tm.wall) + 2, cS, { bottom: true, cBot: cD });
+      boxQ(st, I, Tm.x0 - 1.7, top + 1.1, Z, 4.2, 1.0, 2 * (HL + Tm.wall) + 4, cD, { bottom: true });
+      for (const sz of [-1, 1]) brazier(I, Tm.x0 + 1.5, T.groundXZ(Tm.x0 + 1.5, Z + sz * (HL + 2.5), -1) + 2.2, Z + sz * (HL + 2.5), 1.1, 22);
+      for (const sz of [-1, 1]) boxQ(st, I, Tm.x0 + 1.5, T.groundXZ(Tm.x0 + 1.5, Z + sz * (HL + 2.5), -1) + 0.6, Z + sz * (HL + 2.5), 2.6, 3.2, 2.6, cD);
+      for (const sz of [-1, 1]) this.segCasters.push({ ax: Tm.x0, az: Z + sz * (HL + Tm.wall), bx: Tm.roof1, bz: Z + sz * (HL + Tm.wall), h: 9.5 });
+    }
+    // —— 跳台：沙丘顶的石板、殿内塌落的斜梁（楔形实体） ——
+    T.ramps.forEach((rp, n) => {
+      const M = TRS(rp.x, 0, rp.z, Math.atan2(rp.ux, rp.uz)), P = (x, y, z) => xf(M, x, y, z), w = rp.hw, L = rp.len, us = 1 / 2.8;
+      const yb = (a) => T.groundXZ(rp.x + rp.ux * a, rp.z + rp.uz * a, -1) - (n === 1 ? 0.0 : 0.3), c = dcol('slab');
+      st.quad(P(-w, rp.y0, 0), P(w, rp.y0, 0), P(w, rp.y1, L), P(-w, rp.y1, L), [0, 1, 0], c, [0, 0, 2 * w * us, 0, 2 * w * us, L * us, 0, L * us]);
+      const K = 6;
+      for (let q = 0; q < K; q++) {
+        const a0 = (L * q) / K, a1 = (L * (q + 1)) / K, y0 = lerp(rp.y0, rp.y1, q / K), y1 = lerp(rp.y0, rp.y1, (q + 1) / K);
+        for (const sx of [-1, 1]) st.quad(P(sx * w, y0, a0), P(sx * w, y1, a1), P(sx * w, Math.min(y1, yb(a1) - 0.6), a1), P(sx * w, Math.min(y0, yb(a0) - 0.6), a0), xd(M, sx, 0, 0), cD, [a0 * us, y0 * us, a1 * us, y1 * us, a1 * us, 0, a0 * us, 0]);
+      }
+      st.quad(P(-w, rp.y1, L), P(w, rp.y1, L), P(w, yb(L) - 0.6, L), P(-w, yb(L) - 0.6, L), xd(M, 0, 0, 1), cD);
+      if (n === 1) for (const sx of [-1, 1]) for (let q = 1; q < 6; q++) boxQ(st, M, sx * (w - 0.25), lerp(rp.y0, rp.y1, q / 6) + 0.12, (L * q) / 6, 0.5, 0.24, 1.6, dcol('slabEdge'), { bottom: true });   // 梁两侧的金边石，标出跳台
+    });
+
+    // —— 倒卧巨像：仰面躺在回廊弯心，头颅滚落在一旁 ——
+    {
+      const C = F.colossus, y0 = T.groundXZ(C.x, C.z, -1) - 1.6, M = TRS(C.x, y0, C.z, -C.rot), cG = dcol('gold');
+      for (const sz of [-1, 1]) { boxQ(st, M, -25, 2.4, sz * 3.1, 26, 5.4, 4.8, cS, { cBot: cD }); boxQ(st, M, -38.6, 4.4, sz * 3.1, 3.2, 8.6, 4.8, cS, { cBot: cD }); boxQ(st, M, -12.5, 3.3, sz * 3.3, 3.2, 6.2, 5.4, cD); }
+      boxQ(st, M, -7, 3.2, 0, 10, 7.4, 13.4, cD, { cBot: cD });                            // 腰裙
+      boxQ(st, M, -7, 7.0, 0, 3.2, 0.5, 5, cG);
+      boxQ(st, M, 6.5, 3.9, 0, 17, 8.4, 14.4, cS, { cBot: cD });                           // 躯干
+      boxQ(st, M, 11, 8.3, 0, 7, 0.6, 11.5, cG);                                           // 胸饰
+      boxQ(st, M, 15.6, 3.6, 0, 3.4, 7.8, 15, cS, { cBot: cD });                           // 双肩
+      boxQ(st, M, 18.6, 3.0, 0, 3.4, 5.6, 5.6, cD);                                        // 断颈
+      boxQ(st, M, 4, 2.4, -8.6, 15, 4.6, 3.4, cS, { cBot: cD });                           // 贴身的一臂
+      const Ma = _m4().multiplyMatrices(M, TRS(8, 0, -13, 0.5)), Mb = _m4().multiplyMatrices(M, TRS(-2, 0, 13.5, -0.35));
+      boxQ(st, Ma, 0, 1.8, 0, 7, 3.8, 3.6, cS, { cBot: cD }); boxQ(st, Mb, 0, 1.9, 0, 7.4, 4, 3.8, cS, { cBot: cD });   // 断落的臂
+      const Mh = _m4().multiplyMatrices(M, TRS(30, 0.6, 4, 0.5, 1, 1, 1, 0.12, 0.3));      // 头颅：方面、阶梯冠、长须
+      boxQ(st, Mh, 0, 4.4, 0, 8.4, 9, 8.6, cS, { cBot: cD });
+      boxQ(st, Mh, 4.6, 5, 0, 1.2, 10.4, 10.6, cD, { bottom: true }); boxQ(st, Mh, 6, 5, 0, 1.6, 8.2, 8.4, cS, { bottom: true }); boxQ(st, Mh, 7.5, 5, 0, 1.4, 5.6, 5.8, cG, { bottom: true });
+      boxQ(st, Mh, 0.4, 9.1, 0, 1.4, 1.0, 2.2, cS, { bottom: true });                       // 鼻
+      for (const sz of [-1, 1]) boxQ(st, Mh, 1.9, 8.96, sz * 2.3, 1.0, 0.3, 2.0, cIn);       // 眼窝
+      boxQ(st, Mh, -2.2, 9.0, 0, 0.7, 0.3, 3.4, cIn);                                       // 口
+      boxQ(st, Mh, -5.4, 7.6, 0, 3.4, 2.0, 2.2, cD, { bottom: true });                      // 须
+      const c = Math.cos(C.rot), s = Math.sin(C.rot);
+      this.segCasters.push({ ax: C.x - 38 * c, az: C.z - 38 * s, bx: C.x + 18 * c, bz: C.z + 18 * s, h: 6.5 });
+      this.casters.push({ x: C.x + 30 * c - 4 * s, z: C.z + 30 * s + 4 * c, h: 8.5, w: 9 });
+    }
+
+    // —— 石台（贴着地形起伏铺设的石板）——
+    for (const sl of F.slabs) {
+      const nu = Math.max(2, Math.round(sl.hl / 1.6)), nv = Math.max(2, Math.round(sl.hw / 1.6)), base = dc.n, us = 1 / 2.8, cA = dcol('slab'), cB = dcol('slabEdge');
+      for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) {
+        const a = -sl.hl + (2 * sl.hl * i) / nu, b = -sl.hw + (2 * sl.hw * j) / nv, x = sl.x + sl.ux * a - sl.uz * b, z = sl.z + sl.uz * a + sl.ux * b;
+        const edge = i === 0 || j === 0 || i === nu || j === nv, c = edge ? cB : cA, v = 0.9 + 0.2 * r();
+        dc.vert(x, T.groundXZ(x, z, -1) + (edge ? 0.0 : 0.07), z, 0, 1, 0, c.r * v, c.g * v, c.b * v, a * us, b * us);
+      }
+      for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a = base + j * (nu + 1) + i, b = a + 1, d = a + nu + 1, e = d + 1; dc.tri(a, d, b); dc.tri(b, d, e); }
+    }
+
+    // —— 绿洲：起点直道两侧的灯柱与营帐（夜里的暖色点缀） ——
+    {
+      const s0 = T.L - 150, cW = COL(DPAL.wood), lan = lanternQ.g || (lanternQ.g = new THREE.SphereGeometry(1, 8, 6));
+      for (let k = 0; k < 11; k++) {
+        const s = s0 + k * 34, i = T.idx(T.wrapS(s)), side = k % 2 ? 1 : -1, d = side * (T.rw[i] + 2.6), M = W.frameM(i, d, 0, 0);
+        const gy = T.groundXZ(T.px[i] + T.rx[i] * d, T.pz[i] + T.rz[i] * d, i) - T.py[i];
+        boxQ(pl, M, 0, gy + 2.6, 0, 0.2, 5.2, 0.2, cW); boxQ(pl, M, side * 0.7, gy + 5.1, 0, 1.6, 0.14, 0.14, cW);
+        em.add(lan, _m4().multiplyMatrices(M, TRS(side * 1.3, gy + 4.4, 0, 0, 0.36, 0.46, 0.36)), cEm);
+        const p = xf(M, side * 1.3, gy + 4.4, 0); lampPts.push(p[0], p[1], p[2]); this.lights.push({ x: p[0], z: p[2], r: 13, a: 0.75 });
+      }
+      for (const [x, z, ry, ci] of [[-104, 264, 0.3, 0], [112, 263, -0.2, 1], [14, 213, 0.15, 2], [-88, 216, -0.4, 1]]) {
+        const y = T.groundXZ(x, z, -1), M = TRS(x, y, z, ry), c1 = COL(DPAL.cloth[ci]), c2 = COL(DPAL.cloth[3]), P = (a, b, c) => xf(M, a, b, c);
+        for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) boxQ(pl, M, sx * 3.2, 1.6, sz * 2.6, 0.16, 3.2, 0.16, cW);
+        const apex = P(0, 5, 0), cs = [P(-3.7, 3.1, -3.1), P(3.7, 3.1, -3.1), P(3.7, 3.1, 3.1), P(-3.7, 3.1, 3.1)], hs = [[0, 0.6, -1], [1, 0.6, 0], [0, 0.6, 1], [-1, 0.6, 0]];
+        for (let q = 0; q < 4; q++) { pl.quad(cs[q], cs[(q + 1) % 4], apex, apex, xd(M, hs[q][0], hs[q][1], hs[q][2]), q % 2 ? c2 : c1); pl.quad(cs[q], cs[(q + 1) % 4], apex, apex, xd(M, -hs[q][0], -hs[q][1], -hs[q][2]), q % 2 ? c2 : c1); }
+        em.add(lan, _m4().multiplyMatrices(M, TRS(0, 3.3, 0, 0, 0.34, 0.42, 0.34)), cEm);
+        const p = P(0, 3.3, 0); lampPts.push(p[0], p[1], p[2]); this.lights.push({ x, z, r: 12, a: 0.7 });
+        this.casters.push({ x, z, h: 4.4, w: 7 });
+      }
+    }
+
+    const mk = (b, mat, shadow) => { const m = new THREE.Mesh(b.build(), mat); m.castShadow = shadow; m.receiveShadow = shadow; W.root.add(m); return m; };
+    mk(st, Engine.mats.brick, true); mk(pl, Engine.mats.plain, true); mk(em, Engine.mats.emis, false);
+    const dm = mk(dc, this.decalMat, false); dm.receiveShadow = true; dm.renderOrder = 1;
+    // 火光光晕：不受雾影响，沙暴里仍然看得见
+    const mkPts = (arr, size, color) => {
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+      const mat = new THREE.PointsMaterial({ map: Engine.tex.glow, size, color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, fog: false });
+      const p = new THREE.Points(g, mat); p.frustumCulled = false; p.renderOrder = 5; W.root.add(p); return mat;
+    };
+    this.glowMat = mkPts(glowPts, 9, 0xff8a3a); this.lampMat = mkPts(lampPts, 5.5, 0xffb060);
+  },
+
+  /* ---------- 实例化装饰：棕榈 / 乱石 / 枯草 ---------- */
+  _instances(W) {
+    const T = this.T, G = T.grid, F = T.features, r = makeRng(909), GW = G.nx + 1;
+    const dm = (x, z) => { const i = clamp(Math.round((x - G.x0) / G.cell), 0, G.nx), j = clamp(Math.round((z - G.z0) / G.cell), 0, G.nz); return [G.DM[j * GW + i], G.DB[j * GW + i]]; };
+    const dbl = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    // 棕榈：弯曲的树干 + 七片下垂的羽叶
+    const pb = new MeshBuilder(false), cT = dcol('trunk'), cL = dcol('leaf'), cL2 = dcol('leafDark');
+    { const tg = new THREE.CylinderGeometry(0.13, 0.27, 6.4, 6, 4), p = tg.attributes.position;
+      for (let i = 0; i < p.count; i++) { const u = (p.getY(i) + 3.2) / 6.4; p.setX(i, p.getX(i) + u * u * 0.9); p.setY(i, p.getY(i) + 3.2); }
+      tg.computeVertexNormals(); pb.add(tg, _m4(), cT);
+      for (let k = 0; k < 7; k++) {
+        const a = (k / 7) * TAU + 0.3, ca = Math.cos(a), sa = Math.sin(a), wx = -sa, wz = ca;
+        const pt = (u, w) => { const rr = 0.2 + u * 3.5, y = 6.4 + Math.sin(u * 2.5) * 0.75 - u * u * 1.7; return [0.9 + ca * rr + wx * w, y - Math.abs(w) * 0.35, sa * rr + wz * w]; };
+        for (let q = 0; q < 3; q++) { const u0 = q / 3, u1 = (q + 1) / 3, w0 = 0.62 * (1 - u0 * 0.75), w1 = 0.62 * (1 - u1 * 0.75);
+          pb.quad(pt(u0, -w0), pt(u0, w0), pt(u1, w1), pt(u1, -w1), [ca * 0.3, 1, sa * 0.3], q === 0 ? cL2 : cL, null, q === 2 ? cL2 : cL); }
+      }
+    }
+    const palms = [];
+    const tryPalm = (x, z) => { const c = T.surfAt(x, z), [d1] = dm(x, z); if (c === SURF_ROAD || c === SURF_WATER || c === SURF_STONE || d1 < 13.5) return; const s = 0.85 + r() * 0.55; palms.push(TRS(x, T.gridY(x, z) - 0.2, z, r() * TAU, s, s * (0.9 + r() * 0.3), s)); if (palms.length % 3 === 0) this.casters.push({ x, z, h: 7 * s, w: 3.2 }); };
+    for (const p of F.pools) for (let k = 0; k < 13; k++) { const a = r() * TAU, e = 1.12 + r() * 0.5; tryPalm(p.x + Math.cos(a) * p.rx * e, p.z + Math.sin(a) * p.rz * e); }
+    for (let k = 0; k < 60; k++) { const s = T.L - 190 + r() * 430, sd = r() < 0.5 ? -1 : 1, q = T.posAt(T.wrapS(s), sd * (15 + r() * 26), { x: 0, y: 0, z: 0 }); tryPalm(q.x, q.z); }
+    const pm = new THREE.InstancedMesh(pb.build(), dbl, palms.length); palms.forEach((m, i) => pm.setMatrixAt(i, m));
+    pm.frustumCulled = false; pm.castShadow = true; W.root.add(pm); this.palms = pm; this.palmN = palms.length;
+    // 乱石：散落在软沙与遗迹周围（不在路线上）
+    const rg = new THREE.IcosahedronGeometry(1, 0), rocks = [], tc = new THREE.Color(), cR = dcol('rubble');
+    const addRock = (x, z, s) => rocks.push([TRS(x, T.gridY(x, z) - 0.25 * s, z, r() * TAU, s * (0.8 + r() * 0.9), s * (0.45 + r() * 0.5), s * (0.8 + r() * 0.9), r() * 0.5, r() * 0.5), 0.75 + r() * 0.4]);
+    for (let k = 0; k < 2400 && rocks.length < 190; k++) {
+      const x = G.x0 + 30 + r() * (T.surfW - 60), z = G.z0 + 30 + r() * (T.surfH - 60), [d1, d2] = dm(x, z);
+      if (d1 < 24 || d2 < 16 || d1 > 150 || T.surfAt(x, z) !== SURF_SOFT) continue;
+      addRock(x, z, 0.7 + r() * r() * 3.2);
+    }
+    { const Tm = F.temple; for (let k = 0; k < 26; k++) { const x = Tm.x1 - 8 + r() * 46, sz = r() < 0.5 ? -1 : 1; addRock(x, Tm.z + sz * (Tm.hall + 7 + r() * 16), 0.8 + r() * 2.2); } }
+    const rm = new THREE.InstancedMesh(rg, new THREE.MeshLambertMaterial({ flatShading: true }), rocks.length);
+    rocks.forEach((q, i) => { rm.setMatrixAt(i, q[0]); rm.setColorAt(i, tc.copy(cR).multiplyScalar(q[1])); });
+    rm.frustumCulled = false; rm.castShadow = true; rm.receiveShadow = true; W.root.add(rm); this.rocks = rm; this.rockN = rocks.length;
+    // 枯草丛：硬沙边缘
+    const sb = new MeshBuilder(false), cG1 = COL(0x8a7a3e), cG2 = COL(0xb9a25a);
+    for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU + 0.4, ca = Math.cos(a), sa = Math.sin(a), l = 0.25 + (k % 3) * 0.14, h = 0.75 + (k % 2) * 0.35, tip = [ca * (l + 0.45), h, sa * (l + 0.45)]; sb.quad([ca * l - sa * 0.09, 0, sa * l + ca * 0.09], [ca * l + sa * 0.09, 0, sa * l - ca * 0.09], tip, tip, [ca * 0.5, 1, sa * 0.5], cG1, null, cG2); }
+    const shr = [];
+    for (let k = 0; k < 3000 && shr.length < 230; k++) {
+      const x = G.x0 + 30 + r() * (T.surfW - 60), z = G.z0 + 30 + r() * (T.surfH - 60), [d1] = dm(x, z);
+      if (d1 < 11 || d1 > 46 || T.surfAt(x, z) !== SURF_HARD) continue;
+      const s = 0.7 + r() * 1.1; shr.push(TRS(x, T.gridY(x, z) - 0.05, z, r() * TAU, s, s, s));
+    }
+    const sm = new THREE.InstancedMesh(sb.build(), dbl, shr.length); shr.forEach((m, i) => sm.setMatrixAt(i, m));
+    sm.frustumCulled = false; W.root.add(sm); this.shrubs = sm; this.shrubN = shr.length;
+  },
+
+  /* ---------- 浅水池 ---------- */
+  _water(W) {
+    const T = this.T, pos = [], idx = [];
+    for (const p of T.features.pools) {
+      const y = T.gridY(p.x, p.z) + 0.43, b = pos.length / 3, S = 26; p.level = y;
+      pos.push(p.x, y, p.z);
+      for (let k = 0; k < S; k++) { const a = (k / S) * TAU; pos.push(p.x + Math.cos(a) * p.rx * 1.2, y, p.z + Math.sin(a) * p.rz * 1.2); idx.push(b, b + 1 + ((k + 1) % S), b + 1 + k); }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+    this.water = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x6fa0a8, transparent: true, opacity: 0.74, depthWrite: false }));
+    this.water.renderOrder = 1; W.root.add(this.water);
+  },
+
+  /* ---------- 下一座检查门顶上的光柱 ---------- */
+  _beam(W) {
+    const tex = canvasTex(32, 256, (g) => {
+      const v = g.createLinearGradient(0, 256, 0, 0); v.addColorStop(0, 'rgba(255,255,255,1)'); v.addColorStop(0.25, 'rgba(255,255,255,0.7)'); v.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = v; g.fillRect(0, 0, 32, 256);
+      g.globalCompositeOperation = 'destination-in';
+      const h = g.createLinearGradient(0, 0, 32, 0); h.addColorStop(0, 'rgba(0,0,0,0)'); h.addColorStop(0.5, 'rgba(0,0,0,1)'); h.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = h; g.fillRect(0, 0, 32, 256);
+    }, { repeat: false });
+    const g1 = new THREE.PlaneGeometry(7, 240); g1.translate(0, 120, 0);
+    const mb = new MeshBuilder(true), c = COL(0xffffff);
+    mb.add(g1, _m4(), c); mb.add(g1, TRS(0, 0, 0, Math.PI / 2), c);
+    this.beam = new THREE.Mesh(mb.build(), new THREE.MeshBasicMaterial({ map: tex, color: 0xffd27a, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    this.beam.renderOrder = 6; this.beam.visible = false; this.beam.frustumCulled = false; W.root.add(this.beam);
+  },
+  /** 把光柱移到某座门上；g 为空则隐藏 */
+  setBeam(g) {
+    if (!this.beam) return;
+    this.beam.visible = !!g;
+    if (g) this.beam.position.set(g.x, g.y + (g === this.T.features.finish ? 16.5 : 14.5), g.z);
+  },
+
+  /* ---------- 沙暴粒子：跟着相机的一团飞沙（低画质不用，只靠雾和屏幕遮罩） ---------- */
+  _stormFx(W) {
+    const n = 280, pos = new Float32Array(n * 3), seed = new Float32Array(n * 3), r = makeRng(31337);
+    for (let i = 0; i < n * 3; i++) seed[i] = r();
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    const mat = new THREE.PointsMaterial({ map: Engine.tex.glow, size: 1.5, color: 0xe2b987, transparent: true, opacity: 0, depthWrite: false, sizeAttenuation: true, fog: false });
+    const p = new THREE.Points(g, mat); p.frustumCulled = false; p.renderOrder = 12; p.visible = false; W.root.add(p);
+    this.storm = { pts: p, seed, n };
+  },
+  setStorm(W, k) {
+    this.stormK = k;
+    const P = Engine.preset, cS = Desert._c || (Desert._c = COL(0));
+    cS.set(P.storm || P.fog);
+    W.mountains.forEach((m, i) => m.material.color.set(P.mount[i]).lerp(cS, Math.min(1, k * 1.2)));   // 远山不受雾影响，手动淹没
+    if (this.storm) { const on = k > 0.01 && Engine.qName !== 'low'; this.storm.pts.visible = on; this.storm.pts.material.opacity = k * 0.5; this.storm.pts.material.color.copy(cS).multiplyScalar(1.5); }
+    if (this.water) this.water.material.color.set(P.water).lerp(cS, k * 0.6);
+  },
+
+  /* ---------- 没开实时阴影时的假影子：顺着阳光方向铺在地上的长影 ---------- */
+  _shadows(W, P) {
+    if (this.shadowMesh) { W.root.remove(this.shadowMesh); this.shadowMesh.geometry.dispose(); this.shadowMesh.material.dispose(); this.shadowMesh = null; }
+    const T = this.T, sd = P.sunDir, hl = Math.hypot(sd[0], sd[2]), dx = -sd[0] / hl, dz = -sd[2] / hl, k = hl / Math.max(0.08, sd[1]);
+    const pos = [], col = [], idx = [], A = P.shadow || 0.3;
+    const v = (x, z, a) => { pos.push(x, T.groundXZ(x, z, -1) + 0.09, z); col.push(0, 0, 0, a); return pos.length / 3 - 1; };
+    for (const c of this.casters) {
+      const len = Math.min(c.h * k, 58), n = 4, px = -dz, pz = dx; let prev = null;
+      for (let q = 0; q <= n; q++) { const u = q / n, w = c.w * (0.5 + 0.12 * u), x = c.x + dx * len * u, z = c.z + dz * len * u, a = A * (1 - u) * (1 - u * 0.4);
+        const l = v(x - px * w, z - pz * w, a), r = v(x + px * w, z + pz * w, a); if (prev) idx.push(prev[0], prev[1], r, prev[0], r, l); prev = [l, r]; }
+    }
+    for (const c of this.segCasters) {
+      const len = Math.min(c.h * k, 58), L = Math.hypot(c.bx - c.ax, c.bz - c.az), nl = Math.max(1, Math.round(L / 9)), nw = c.thin ? 1 : 3, rows = [];
+      for (let j = 0; j <= nw; j++) { const row = []; for (let i = 0; i <= nl; i++) { const u = i / nl, w = j / nw; row.push(v(lerp(c.ax, c.bx, u) + dx * len * w, lerp(c.az, c.bz, u) + dz * len * w, A * (c.thin ? 0.8 : 1) * (1 - w * 0.75))); } rows.push(row); }
+      if (c.thin) { rows.length = 0; const off = len * 0.94, t = 2.2; const r0 = [], r1 = []; for (let i = 0; i <= nl; i++) { const u = i / nl, x = lerp(c.ax, c.bx, u) + dx * off, z = lerp(c.az, c.bz, u) + dz * off; r0.push(v(x - dx * t, z - dz * t, A * 0.5)); r1.push(v(x + dx * t, z + dz * t, A * 0.5)); } rows.push(r0, r1); }
+      for (let j = 0; j < rows.length - 1; j++) for (let i = 0; i < nl; i++) idx.push(rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j][i], rows[j + 1][i + 1], rows[j + 1][i]);
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5 }));
+    m.renderOrder = 2; m.frustumCulled = false; W.root.add(m); this.shadowMesh = m; this.shadowTod = P;
+  },
+
+  applyDensity(W, d) {
+    if (this.palms) this.palms.count = Math.max(1, Math.floor(this.palmN * Math.max(d, 0.7)));
+    if (this.rocks) this.rocks.count = Math.max(1, Math.floor(this.rockN * d));
+    if (this.shrubs) this.shrubs.count = Math.max(1, Math.floor(this.shrubN * d));
+  },
+  applyTime(W, P) {
+    this.rebuildRoad(W, P.bake);
+    // 地形顶点色：夜里火盆与灯周围泛出暖光
+    for (const c of this.chunks) {
+      const a = c.mesh.geometry.attributes.color, arr = a.array, b = c.base, gl = c.glow;
+      for (let i = 0; i < gl.length; i++) { const g = gl[i] * P.bake; arr[i * 3] = b[i * 3] * (1 + g * 2.5); arr[i * 3 + 1] = b[i * 3 + 1] * (1 + g * 1.3); arr[i * 3 + 2] = b[i * 3 + 2] * (1 + g * 0.35); }
+      a.needsUpdate = true;
+    }
+    this.glowMat.opacity = Math.min(1, 0.35 + P.glow * 0.6); this.lampMat.opacity = P.cityLights * 0.85;
+    W.mountains.forEach((m, i) => m.material.color.set(P.mount[i]));
+    if (this.water) this.water.material.color.set(P.water);
+    if (this.signMat) this.signMat.color.setScalar(0.55 + 0.45 * P.lantern * (P.stars ? 0.8 : 1));
+    if (this.shadowTod !== P || !this.shadowMesh) this._shadows(W, P);
+    this.shadowMesh.visible = !Engine.q.shadows;
+    this.stormK = 0;
+  },
+  update(W, time) {
+    const S = this.storm;
+    if (S && S.pts.visible) {                        // 飞沙：在相机周围的盒子里顺风循环
+      const cam = Engine.camera.position, a = S.pts.geometry.attributes.position, p = a.array, bx = 46, by = 14, bz = 46;
+      for (let i = 0; i < S.n; i++) {
+        const u = (S.seed[i * 3] + time * (0.55 + S.seed[i * 3 + 1] * 0.5)) % 1, v = (S.seed[i * 3 + 1] + Math.sin(time * 1.3 + i) * 0.03 + 1) % 1, w = (S.seed[i * 3 + 2] + time * 0.21) % 1;
+        p[i * 3] = cam.x + (u - 0.5) * bx; p[i * 3 + 1] = cam.y + (v - 0.5) * by; p[i * 3 + 2] = cam.z + (w - 0.5) * bz;
+      }
+      a.needsUpdate = true;
+    }
+    if (this.beam && this.beam.visible) { this.beam.rotation.y = time * 0.6; this.beam.material.opacity = 0.72 + 0.16 * Math.sin(time * 3.1); }
+    if (this.glowMat) this.glowMat.size = 9 + Math.sin(time * 9.3) * 0.5 + Math.sin(time * 14.1) * 0.35;
   },
 };
 
@@ -6344,6 +7330,7 @@ function makeKart(typeIdx, opts) {
     steer: 0, drifting: 0, driftT: 0, nitro: 0, boostT: 0, boostMul: 1, sinceBoost: 9, lastBoostNitro: false, chain: 0,
     slowT: 0, spinT: 0, spinDir: 1, shieldT: 0, item: -1, itemRoll: 0, frozenT: 0, falling: false, fallT: 0, blinkT: 0,
     lastSafeS: 0, wallT: 0, pitch: 0, roll: 0, hop: 0, hopV: 0, wheelRot: 0, padCd: 0, nextCp: 0, slope: 0, wrongT: 0,
+    surf: 4, gate: 0, missT: 0, oobT: 0, route: 0,     // 开放赛道：脚下地表 / 下一座检查门 / 漏门计时 / 越界计时 / 离路线距离
     ai: null,
   };
   return k;
@@ -6362,6 +7349,7 @@ function placeKart(k, T, s, d) {
   k.V = 0; k.vy = 0; k.grounded = true; k.airT = 0; k.prevGy = p.y;
   k.idx = T.idx(T.wrapS(s)); k.s = T.wrapS(s); k.d = d; k.lastSafeS = k.s;
   k.steer = 0; k.drifting = 0; k.driftT = 0; k.falling = false; k.fallT = 0; k.pitch = 0; k.roll = 0;
+  k.surf = 4; k.oobT = 0; k.route = 0;
 }
 /** 坠落后重置回赛道，并冻结片刻（损失时间） */
 function respawnKart(k, T) {
@@ -6371,11 +7359,12 @@ function respawnKart(k, T) {
   let dsw = k.s - oldS; if (dsw > T.L / 2) dsw -= T.L; else if (dsw < -T.L / 2) dsw += T.L;
   k.prog = prog + dsw;
   k.frozenT = 1.1; k.blinkT = 2.4; k.boostT = 0; k.slowT = 0; k.spinT = 0;
-  if (k.ai) { k.ai.s = k.s; k.ai.d = 0; }
+  if (k.ai) { k.ai.s = k.s; k.ai.d = 0; k.ai.br = null; }
 }
 
 /** 垂直方向（贴地 / 腾空 / 坠落）——玩家与 AI 共用 */
 function kartVertical(k, T, i, t, d, dt) {
+  if (T.open) return kartVerticalOpen(k, T, i, t, d, dt);
   const nominal = T.heightAt(i, t);
   let gy = k.falling ? -Infinity : T.groundAt(i, t, d);
   k.vy -= PHYS.g * dt; k.y += k.vy * dt;
@@ -6398,6 +7387,70 @@ function kartVertical(k, T, i, t, d, dt) {
   k.slope = (T.py[T.W(i + 1)] - T.py[i]) / T.ds;
   if (T.hole[i]) k.slope = 0;
   return { respawn: false, landed, fell };
+}
+
+/** 开放地形的垂直方向：地面来自高度场，不会坠落；沙丘与斜梁自然形成飞跃 */
+const _vr = { respawn: false, landed: 0, fell: false };
+function kartVerticalOpen(k, T, i, t, d, dt) {
+  const gy = T.groundK(k.x, k.z, i, t, d, k.y);
+  k.vy -= PHYS.g * dt; k.y += k.vy * dt;
+  _vr.landed = 0;
+  if (k.y <= gy) {
+    if (k.airT > 0.3) _vr.landed = -k.vy;                  // 贴地 0.2 米内已算着地，这里只看滞空时间
+    const rise = gy - k.prevGy;
+    let vg = rise / dt;
+    if (rise > 0.12 && rise > Math.abs(k.V) * dt * 0.6) vg = 2;      // 路沿/台阶：轻轻一颠，不弹飞
+    k.y = gy; k.vy = clamp(vg, -40, 40); k.grounded = true; k.airT = 0;
+  } else {
+    k.grounded = (k.y - gy) < 0.2;
+    if (!k.grounded) k.airT += dt;
+  }
+  k.prevGy = gy;
+  if (k.grounded) k.slope = T.slopeK(k.x, k.z, i, d, k.h, k.y);
+  return _vr;
+}
+
+/** 开放地形的障碍碰撞：石柱/门柱/巨像（圆）、神殿墙（矩形）、跳台侧面。返回是否被推开 */
+const KART_R = 0.95, _hitP = { nx: 0, nz: 0 };
+function kartObstacles(k, T, vel, dt, hooks) {
+  let nx = 0, nz = 0, pen = 0;
+  const x = k.x, z = k.z;
+  for (const o of T.obs) {
+    const dx = x - o.x, dz = z - o.z, rr = o.r + KART_R;
+    if (dx > rr || dx < -rr || dz > rr || dz < -rr) continue;
+    const d = Math.hypot(dx, dz);
+    if (d < rr && rr - d > pen) { pen = rr - d; if (d > 1e-4) { nx = dx / d; nz = dz / d; } else { nx = 1; nz = 0; } }
+  }
+  for (const b of T.boxes) {
+    if (x < b.x0 - KART_R || x > b.x1 + KART_R || z < b.z0 - KART_R || z > b.z1 + KART_R) continue;
+    const cx = clamp(x, b.x0, b.x1), cz = clamp(z, b.z0, b.z1), dx = x - cx, dz = z - cz, d = Math.hypot(dx, dz);
+    if (d > 1e-4) { if (d < KART_R && KART_R - d > pen) { pen = KART_R - d; nx = dx / d; nz = dz / d; } }
+    else {                                    // 圆心已在矩形内：从最近的一面推出去
+      const l = x - b.x0, r = b.x1 - x, u = z - b.z0, v = b.z1 - z, m = Math.min(l, r, u, v);
+      pen = m + KART_R; nx = m === l ? -1 : m === r ? 1 : 0; nz = m === u ? -1 : m === v ? 1 : 0;
+    }
+  }
+  for (const r of T.ramps) {                  // 跳台：车比台面低得多时，侧面和背面是实体
+    const dx = x - r.x, dz = z - r.z, a = dx * r.ux + dz * r.uz, b = -dx * r.uz + dz * r.ux, hw = r.hw + KART_R * 0.5;
+    if (a < 0 || a > r.len + KART_R || b < -hw || b > hw) continue;
+    const ry = r.y0 + (r.y1 - r.y0) * Math.min(1, a / r.len);
+    if (ry - k.y < 0.7) continue;
+    const pb = hw - Math.abs(b), pa = r.len + KART_R - a;
+    if (pa < pb) { if (pa > pen) { pen = pa; nx = r.ux; nz = r.uz; } }
+    else if (pb > pen) { const sg = b < 0 ? -1 : 1; pen = pb; nx = -r.uz * sg; nz = r.ux * sg; }
+  }
+  if (pen <= 0) return false;
+  k.x += nx * pen; k.z += nz * pen;
+  const vn = -(vel.x * nx + vel.z * nz);       // 撞向障碍的速度分量
+  if (vn > 0) {
+    vel.x += nx * vn * 1.22; vel.z += nz * vn * 1.22;
+    const nv = Math.hypot(vel.x, vel.z) * (1 - clamp(vn * 0.011, 0, 0.3)), newPhi = Math.atan2(vel.x, vel.z);
+    if (k.V >= 0) { k.phi = newPhi; k.V = nv; } else { k.phi = newPhi + Math.PI; k.V = -nv; }
+    k.h += wrapPi(k.phi + (k.V < 0 ? Math.PI : 0) - k.h) * Math.min(1, 0.06 + vn * 0.014);   // 车头顺着弹开的方向，避免顶死
+    if (hooks && vn > 2.5 && k.wallT <= 0) { _hitP.nx = -nx; _hitP.nz = -nz; hooks.wallHit(k, vn, 1, _hitP); k.wallT = 0.25; }
+  }
+  k.V *= 1 - 0.55 * dt;
+  return true;
 }
 
 /** 进度累计 / 圈数 / 检查点 */
@@ -6433,6 +7486,9 @@ function kartPhysics(k, inp, dt, T, hooks) {
   let maxV = st.maxSpeed;
   if (k.boostT > 0) maxV *= k.boostMul;
   if (k.slowT > 0) maxV *= 0.6;
+  // 开放赛道：地表限速与抓地（喷射期间无视沙地/浅水减速）
+  const sf = T.open && k.grounded ? SURFACES[k.surf] : null;
+  if (sf && !(k.boostT > 0 && k.boostMul >= 1.2)) maxV *= sf.speed;
 
   // —— 漂移状态 ——
   if (k.grounded && !k.drifting && driftKey && Math.abs(steerIn) > 0.2 && k.V > 13) {
@@ -6457,7 +7513,8 @@ function kartPhysics(k, inp, dt, T, hooks) {
   k.h -= yaw * dt;
 
   // —— 行进方向追随车头 ——
-  const grip = !k.grounded ? 0.6 : k.drifting ? PHYS.driftGrip * st.driftGrip : PHYS.grip;
+  let grip = !k.grounded ? 0.6 : k.drifting ? PHYS.driftGrip * st.driftGrip : PHYS.grip;
+  if (sf) grip *= sf.grip;
   let beta = wrapPi(k.h - k.phi);
   k.phi += beta * (1 - Math.exp(-grip * dt));
   beta = wrapPi(k.h - k.phi);
@@ -6490,7 +7547,7 @@ function kartPhysics(k, inp, dt, T, hooks) {
   if (brake > 0) a -= k.V > 0.6 ? 32 * brake : (k.V > -11 ? 10 * brake : 0);
   if (throttle <= 0 && brake <= 0) a -= sign(k.V) * Math.min(spd * 4, 2.2 + 0.22 * spd);
   a -= 4.6 * sb * sign(k.V);                                  // 侧滑阻力
-  a -= PHYS.g * 0.22 * k.slope * Math.cos(wrapPi(k.h - T.theta[k.idx]));
+  a -= PHYS.g * 0.22 * k.slope * (T.open ? 1 : Math.cos(wrapPi(k.h - T.theta[k.idx])));
   if (!k.grounded) a = Math.min(a, 0) * 0.3;
   k.V += a * dt;
   if (throttle > 0 && brake <= 0 && k.V < 0) k.V += 20 * dt;
@@ -6500,10 +7557,11 @@ function kartPhysics(k, inp, dt, T, hooks) {
   k.x += vx * dt; k.z += vz * dt;
 
   // —— 赛道投影 / 垛墙碰撞 ——
-  const P = T.project(k.x, k.z, k.idx, _proj);
+  let P = T.project(k.x, k.z, k.idx, _proj);
   k.idx = P.i;
+  if (T.open) { kartPhysicsOpen(k, T, P, vx, vz, dt, hooks); return; }
   const nominal = T.heightAt(P.i, P.t);
-  const lim = HALF_W - 0.92, sd = P.d > 0 ? 1 : -1;
+  const lim = T.halfW - 0.92, sd = P.d > 0 ? 1 : -1;
   if (!k.falling && Math.abs(P.d) > lim && T.hasRail(P.i, sd) && k.y < nominal + PHYS.railH) {
     const over = Math.abs(P.d) - lim;
     k.x -= P.nx * sd * over; k.z -= P.nz * sd * over; P.d = sd * lim;
@@ -6545,12 +7603,42 @@ function kartPhysics(k, inp, dt, T, hooks) {
   }
 }
 
+/** 开放赛道的后半步：障碍碰撞、进度、垂直、地表、越界复位、加速带 */
+const _vel = { x: 0, z: 0 };
+function kartPhysicsOpen(k, T, P, vx, vz, dt, hooks) {
+  _vel.x = vx; _vel.z = vz;
+  if (kartObstacles(k, T, _vel, dt, hooks)) { P = T.project(k.x, k.z, k.idx, _proj); k.idx = P.i; }
+  if (k.wallT > 0) k.wallT -= dt;
+  k.d = P.d;
+  kartProgress(k, T, P.s);
+  const vr = kartVerticalOpen(k, T, P.i, P.t, P.d, dt);
+  if (vr.landed > 7 && hooks) hooks.land(k, vr.landed);
+  if (k.grounded) {
+    k.surf = T.surfAt(k.x, k.z);
+    for (const r of T.ramps) { const dx = k.x - r.x, dz = k.z - r.z, a = dx * r.ux + dz * r.uz, b = -dx * r.uz + dz * r.ux; if (a >= 0 && a <= r.len && b >= -r.hw && b <= r.hw && k.y > T.gridY(k.x, k.z) + 0.15) k.surf = SURF_STONE; }
+    if (k.surf === SURF_ROAD && Math.abs(P.d) < T.rw[P.i]) k.lastSafeS = P.s;
+  }
+  // 越界：离路线太远 → 提示，持续片刻后自动复位
+  k.route = T.routeDist(k.x, k.z);
+  if (k.route > 60) { k.oobT += dt; if (k.oobT > 0.7) { respawnKart(k, T); if (hooks) hooks.respawn(k, true); return; } } else k.oobT = 0;
+  if (k.grounded && k.padCd <= 0) {
+    const st = k.type;
+    for (const p of T.features.pads) {
+      let ds2 = P.s - p.s; if (ds2 < -T.L / 2) ds2 += T.L;
+      if (ds2 >= 0 && ds2 <= p.len && Math.abs(P.d - p.d) < (p.hw || 2.4) + 0.3) {
+        setBoost(k, 1.26, 1.1); k.V = Math.max(k.V, st.maxSpeed * 0.86); k.padCd = 1.2; k.lastBoostNitro = false;
+        if (hooks) hooks.pad(k);
+      }
+    }
+  }
+}
+
 /** 每帧：把物理状态同步到模型（车身姿态、车轮、尾焰、阴影、护盾） */
 function kartVisual(k, T, dt, time) {
   const m = k.model, g = m.group;
   // 小跳（起漂瞬间）
   if (k.hop > 0 || k.hopV !== 0) { k.hopV -= 30 * dt; k.hop += k.hopV * dt; if (k.hop <= 0) { k.hop = 0; k.hopV = 0; } }
-  const along = Math.cos(wrapPi(k.h - T.theta[k.idx]));
+  const along = T.open ? 1 : Math.cos(wrapPi(k.h - T.theta[k.idx]));
   const targetPitch = k.grounded ? Math.atan(k.slope) * along : clamp(k.vy * 0.022, -0.4, 0.35);
   k.pitch = damp(k.pitch, targetPitch, k.grounded ? 12 : 4, dt);
   const slip = wrapPi(k.h - k.phi);
@@ -6592,15 +7680,49 @@ function kartVisual(k, T, dt, time) {
     m.trail.update(k.x - Math.sin(k.h) * 1.35, k.y + k.hop + 0.42, k.z - Math.cos(k.h) * 1.35, rxh, rzh, on, tr, tgc, tb, dt);
   }
   // 影子贴地
-  const gy = T.hole[k.idx] || k.falling ? -1e9 : T.heightAt(k.idx, 0);
-  m.shadow.visible = gy > -1e8 && g.visible && Math.abs(k.d) < HALF_W + 0.3;
+  const gy = T.open ? k.prevGy : (T.hole[k.idx] || k.falling ? -1e9 : T.heightAt(k.idx, 0));
+  m.shadow.visible = gy > -1e8 && g.visible && (T.open || Math.abs(k.d) < T.halfW + 0.3);
   if (m.shadow.visible) {
     const hgt = Math.max(0, k.y - gy), sc = 1 / (1 + hgt * 0.18);
     m.shadow.position.set(k.x, Math.min(k.y, gy + (k.y - gy) * 0.02) + 0.05, k.z);
-    if (hgt > 0.3) m.shadow.position.y = T.heightAt(k.idx, 0.5) + 0.05;
+    if (hgt > 0.3) m.shadow.position.y = (T.open ? gy : T.heightAt(k.idx, 0.5)) + 0.05;
     m.shadow.rotation.set(-Math.atan(k.slope) * along, k.h, 0);
     m.shadow.scale.setScalar(sc);
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * 开放赛道的检查门规则：石拱门必须按顺序通过，漏门不罚时，回头补过即可。
+ * 玩家的进度不再靠累加，而是由「圈数 + 已过的门 + 当前位置」推导：抄近路时投影跳转也不会算错，
+ * 漏了门则进度停在那座门上。返回 0 无事 / 1 通过检查门 / 2 带着全部检查门冲线（_gateOver 为越线距离）
+ * ------------------------------------------------------------------------- */
+let _gateOver = 0;
+function openGateStep(k, T, x0, z0, dt) {
+  const F = T.features, G = F.gates, nG = G.length, L = T.L;
+  if (k.ai) {                                               // AI 沿路线行驶，按进度依次过门
+    const lapS = k.prog - Math.floor(k.prog / L) * L;
+    if (k.gate >= nG || (k.gate > 0 && lapS < G[0].s)) k.gate = 0;
+    while (k.gate < nG && lapS >= G[k.gate].s) k.gate++;
+    return 0;
+  }
+  let ev = 0;
+  const g = k.gate < nG ? G[k.gate] : F.finish;
+  const a0 = (x0 - g.x) * g.tx + (z0 - g.z) * g.tz, a1 = (k.x - g.x) * g.tx + (k.z - g.z) * g.tz;
+  if ((a0 < 0) !== (a1 < 0) && Math.abs(a0) + Math.abs(a1) < 30) {
+    const f = a0 / (a0 - a1), lat = (x0 + (k.x - x0) * f - g.x) * g.rx + (z0 + (k.z - z0) * f - g.z) * g.rz;
+    if (Math.abs(lat) <= g.hw + 0.6) {
+      if (k.gate < nG) { k.gate++; ev = 1; }                // 检查门：正反方向穿过都算
+      else if (a1 >= 0) { k.gate = 0; k.lap++; ev = 2; _gateOver = a1; }   // 终点：必须正向冲线
+    }
+  }
+  const sPrev = k.gate === 0 ? 0 : G[k.gate - 1].s, sNext = k.gate < nG ? G[k.gate].s : L, span = sNext - sPrev;
+  const f = (((k.s - sPrev) % L) + L) % L;
+  let lp, miss = false;
+  if (f <= span) lp = sPrev + f;
+  else { const over = f - span, back = L - f; if (over <= back) { lp = sNext; miss = over > 24; } else lp = sPrev - back; }
+  k.prog = k.lap * L + lp;
+  k.missT = miss ? k.missT + dt : 0;
+  return ev;
 }
 
 /* ============================================================================
@@ -6626,6 +7748,7 @@ function aiInit(k, n) {
     s: k.s, d: k.d, lane: [-2.4, 1.8, -0.7, 2.6, 0.5][n % 5], skill: [1.0, 0.988, 0.974, 0.962, 0.95][n % 5],
     nitro: 0.2 * n, vis: 0, startDelay: 0.08 + Math.random() * 0.4, startBoost: Math.random() < 0.35,
     itemT: 0, wobble: Math.random() * 10,
+    n, br: null, bu: 0, bd: 0, pi: 0, hx: 0, hz: 1, lane3: [0, 2, 1, 2, 0][n % 5],   // 开放赛道：近路状态与柱廊选道
   };
 }
 const sDelta = (T, a, b) => { let d = a - b; if (d > T.L / 2) d -= T.L; else if (d < -T.L / 2) d += T.L; return d; };
@@ -6639,6 +7762,7 @@ function aiStep(k, dt, T, R) {
   if (k.shieldT > 0) k.shieldT -= dt;
   if (k.blinkT > 0) k.blinkT -= dt;
   if (k.padCd > 0) k.padCd -= dt;
+  if (T.open && A.br) { aiBranchStep(k, dt, T, R); return; }
   const i = T.idx(A.s);
 
   // —— 目标速度：前瞻弯道曲率限速 + 橡皮筋 ——
@@ -6668,8 +7792,8 @@ function aiStep(k, dt, T, R) {
       }
     }
   }
-  const J = T.features.jump, dj = sDelta(T, J.lip, A.s);
-  if (dj > -2 && dj < 95) tgt = A.lane * 0.35;                // 飞跃前收拢到坡道中央
+  const J = T.features.jump;
+  if (J) { const dj = sDelta(T, J.lip, A.s); if (dj > -2 && dj < 95) tgt = A.lane * 0.35; }   // 飞跃前收拢到坡道中央
   for (const c of Items.clouds) {
     const dc = sDelta(T, c.s, A.s);
     if (dc > 0 && dc < 34 && Math.abs(c.d - tgt) < 4.6 && !(k.shieldT > 0)) tgt = c.d + (c.d > 0 ? -5.2 : 5.2);
@@ -6688,9 +7812,28 @@ function aiStep(k, dt, T, R) {
     if (!T.railR[q]) tgt = Math.min(tgt, 3.0);
     if (!T.railL[q]) tgt = Math.max(tgt, -3.0);
   }
-  tgt = clamp(tgt, -5.4, 5.4);
+  let dLo = -T.halfW + 1, dHi = T.halfW - 1;
+  if (T.open) {
+    // 断柱廊：进廊前选定一条线并保持；斜梁前收拢到梁上
+    const LN = T.features.lanes, da = sDelta(T, LN.s0, A.s), inside = da <= 0 && sDelta(T, LN.s1, A.s) >= 0;
+    if (da > 100 && da < 130) A.lane3 = [0, 2, 1, 2, 0][A.n % 5];
+    if (inside) { const r = LN.list[A.lane3]; dLo = r[0]; dHi = r[1]; tgt = clamp(LN.center[A.lane3] + (tgt - A.d) * 0.2, dLo, dHi); }
+    else {
+      const lim = T.rw[i] - 1.3;
+      if (da > 0 && da < 100) {
+        // 来不及横移到预选的线（比如刚从近路并回来）就改走最近的一条
+        if (Math.abs(LN.center[A.lane3] - A.d) > da * 0.085 + 1.2) { let bd = 99; for (let q = 0; q < 3; q++) { const e = Math.abs(LN.center[q] - A.d); if (e < bd) { bd = e; A.lane3 = q; } } }
+        tgt = clamp(LN.center[A.lane3], -lim, lim);
+      } else tgt = clamp(tgt, -5.4, 5.4);
+      dLo = -lim; dHi = lim;
+      for (const zn of T.features.zones) {
+        const dz = sDelta(T, zn.s0, A.s);
+        if (dz < 60 && sDelta(T, zn.s1, A.s) >= 0) { tgt = clamp(tgt, zn.lo, zn.hi); if (dz <= 0) { dLo = zn.lo - 0.8; dHi = zn.hi + 0.8; } }
+      }
+    }
+  } else tgt = clamp(tgt, -5.4, 5.4);
   A.d += clamp((tgt - A.d) * 2.3, -4.6, 4.6) * dt * Math.min(1, k.V / 9);
-  A.d = clamp(A.d, -HALF_W + 1, HALF_W - 1);
+  A.d = clamp(A.d, dLo, dHi);
 
   // —— 纵向 ——
   if (!R.started) { k.V = 0; }
@@ -6705,16 +7848,39 @@ function aiStep(k, dt, T, R) {
   }
   // AI 氮气：弯中积攒，出弯进直道时释放
   if (kMax > 0.012 && k.grounded) A.nitro = Math.min(2, A.nitro + dt * 0.2 * D.speed);
-  if (A.nitro >= 1 && kFar < 0.0075 && k.boostT <= 0 && k.V > 18 && k.spinT <= 0 && R.started) { A.nitro -= 1; setBoost(k, 1.24, 1.9); }
+  let hold = false;
+  if (T.open && R.difficulty === 2) for (const b of T.features.branches) { const db = sDelta(T, b.s0, A.s); if (db > 0 && db < 520) hold = true; }   // 困难：近路在前就把氮气留着
+  if (A.nitro >= 1 && kFar < 0.0075 && k.boostT <= 0 && k.V > 18 && k.spinT <= 0 && R.started && !hold) { A.nitro -= 1; setBoost(k, 1.24, 1.9); }
 
   // —— 位置 ——
+  const sPrev = A.s;
   A.s = T.wrapS(A.s + (k.V * dt) / clamp(1 - A.d * T.turn[i], 0.6, 1.5));
+  if (T.open && R.started) {
+    for (const b of T.features.branches) {
+      if (sDelta(T, sPrev, b.s0) < 0 && sDelta(T, A.s, b.s0) >= 0 && aiWantsBranch(k, b, R)) {
+        A.br = b; A.bu = sDelta(T, A.s, b.s0); A.pi = T.idx(b.s0);
+        { // 投影到近路折线前段：得到真实的沿线距离与横向偏移，进近路时位置不跳
+          let best = 1e9;
+          for (let j = 0; j < Math.min(b.n, 30); j++) {
+            let hx = b.bx[j + 1] - b.bx[j], hz = b.bz[j + 1] - b.bz[j]; const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l;
+            const ex = k.x - b.bx[j], ez = k.z - b.bz[j], a = ex * hx + ez * hz, c = -ex * hz + ez * hx;
+            if (j > 0 && a < 0) continue;
+            const e = Math.abs(c) + Math.max(0, a - l) + Math.max(0, -a);
+            if (e < best) { best = e; A.bu = j * b.step + (j ? Math.max(0, a) : a); A.bd = c; }   // 首段允许为负：车还在近路起点之后
+          }
+        }
+        A.ht = k.h;
+        aiBranchStep(k, 0, T, R); return;
+      }
+    }
+  }
   kartProgress(k, T, A.s);
   T.posAt(A.s, A.d, _aiP);
   k.x = _aiP.x; k.z = _aiP.z; k.d = A.d;
   const f = A.s / T.ds, i2 = Math.floor(f) % T.N, t2 = f - Math.floor(f);
   k.idx = i2;
   const vr = kartVertical(k, T, i2, t2, A.d, dt);
+  if (T.open) k.surf = SURF_ROAD;
   if (vr.respawn) { respawnKart(k, T); return; }
   if (k.grounded && !T.hole[i2]) k.lastSafeS = A.s;
   // 加速带
@@ -6728,9 +7894,60 @@ function aiStep(k, dt, T, R) {
   const th = T.thetaAt(A.s), ts = T.turnSm[i2];
   const want = (Math.abs(ts) > 0.0125 && k.V > 22 && k.grounded) ? sign(ts) : 0;
   A.vis = damp(A.vis, want, 5, dt);
-  k.h = th - A.vis * 0.34; k.phi = th;
+  if (A.hOff) { A.hOff = damp(A.hOff, 0, 5, dt); if (Math.abs(A.hOff) < 1e-3) A.hOff = 0; }   // 刚从近路并回古道：车头缓缓转回
+  k.h = th - A.vis * 0.34 + (A.hOff || 0); k.phi = th + (A.hOff || 0);
   k.drifting = Math.abs(A.vis) > 0.5 ? sign(A.vis) : 0;
   k.steer = clamp(ts * 45 + (tgt - A.d) * 0.15, -1, 1);
+}
+
+/** 各难度的近路策略：简单只走古道；普通每辆车走固定的 1～2 条；困难手里有氮气才横穿沙地 */
+const AI_ROUTES = [['ne'], ['west', 'dune'], ['dune'], ['west'], ['ne', 'west']];
+function aiWantsBranch(k, b, R) {
+  if (R.difficulty === 0 || k.spinT > 0 || k.V < 14) return false;
+  if (R.difficulty === 1) return AI_ROUTES[k.ai.n % AI_ROUTES.length].indexOf(b.id) >= 0;
+  return k.ai.nitro >= 1;
+}
+const _aiProj = { i: 0, t: 0, s: 0, d: 0, nx: 0, nz: 0 };
+/** AI 走沙地近路：沿预设折线行驶，进度按比例映射回中心线；同样受地表减速约束 */
+function aiBranchStep(k, dt, T, R) {
+  const A = k.ai, b = A.br, D = DIFFS[R.difficulty], st = k.type;
+  const gap = R.player.prog - k.prog;
+  let band = gap > 0 ? 1 + Math.min(gap / 220, 1) * D.bandUp : 1 - Math.min(-gap / 260, 1) * D.band;
+  if (R.player.finished) band = 1;
+  let maxV = st.maxSpeed * D.speed * A.skill * band;
+  if (k.boostT > 0) maxV *= k.boostMul;
+  if (k.slowT > 0) maxV *= 0.6;
+  // 困难：踏上沙地就喷氮气（喷射期间无视沙地减速）
+  if (R.difficulty === 2 && A.nitro >= 1 && k.boostT <= 0 && k.grounded && k.surf !== SURF_ROAD && k.surf !== SURF_STONE && k.spinT <= 0) { A.nitro -= 1; setBoost(k, 1.24, 1.9); maxV *= k.boostMul; }
+  if (k.grounded && !(k.boostT > 0 && k.boostMul >= 1.2)) maxV *= SURFACES[k.surf].speed;
+  if (k.frozenT > 0) { k.frozenT -= dt; k.V = 0; }
+  else if (k.spinT > 0) k.V = Math.max(0, k.V - 14 * dt);
+  else if (k.V < maxV) k.V = Math.min(maxV, k.V + (st.accel * (1 - Math.pow(clamp(k.V / maxV, 0, 1), 1.7) * 0.92) + (k.boostT > 0 ? 15 : 0)) * dt);
+  else k.V = Math.max(maxV, k.V - 24 * dt);
+  A.bu += k.V * dt;
+  A.bd = damp(A.bd, clamp(A.bd, -2.4, 2.4), 2.5, dt);
+  if (A.bu >= b.len) {                                        // 回到古道
+    // 按车的真实位置（上一步末尾 + 这一步的前进）并回古道，不横跳
+    const ex = k.x + Math.sin(k.h) * (A.bu - b.len), ez = k.z + Math.cos(k.h) * (A.bu - b.len), q = T.project(ex, ez, A.pi, _aiProj);
+    A.br = null; A.s = q.s; A.d = clamp(q.d, -T.halfW + 1, T.halfW - 1);
+    A.hOff = wrapPi(k.h - T.thetaAt(A.s)); A.ht = null;
+    kartProgress(k, T, A.s);
+    const p = T.posAt(A.s, A.d, _aiP); k.x = p.x; k.z = p.z; k.d = A.d; k.idx = T.idx(A.s);
+    return;
+  }
+  const f = A.bu / b.step, j = clamp(Math.floor(f), 0, b.n - 1), t = f - j;   // bu<0 时沿首段外推
+  let hx = b.bx[j + 1] - b.bx[j], hz = b.bz[j + 1] - b.bz[j]; const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l;
+  k.x = lerp(b.bx[j], b.bx[j + 1], t) - hz * A.bd; k.z = lerp(b.bz[j], b.bz[j + 1], t) + hx * A.bd;
+  A.hx = hx; A.hz = hz;
+  A.s = T.wrapS(b.s0 + b.road * (Math.max(0, A.bu) / b.len));
+  kartProgress(k, T, A.s);
+  const P = T.project(k.x, k.z, A.pi, _aiProj); A.pi = P.i; k.idx = P.i; k.d = P.d;
+  kartVertical(k, T, P.i, P.t, P.d, dt);
+  if (k.grounded) k.surf = T.surfAt(k.x, k.z);
+  const th = Math.atan2(hx, hz);
+  A.vis = damp(A.vis, 0, 5, dt);
+  A.ht = A.ht == null ? th : A.ht + wrapPi(th - A.ht) * (1 - Math.exp(-6 * dt));   // 车头缓转向近路方向
+  k.h = A.ht; k.phi = A.ht; k.drifting = 0; k.steer = 0;
 }
 
 /** 自动驾驶输入（玩家冲线后的巡航，以及自检用）：对同一套物理给出按键 */
@@ -6739,9 +7956,16 @@ function autoPilotInput(k, T, inp, aggressive) {
   const ld = T.lineD[T.idx(T.wrapS(sA))] * 0.75;
   let td = ld;
   for (let j = 0; j <= 14; j++) { const q = T.W(k.idx + j); if (!T.railR[q]) td = Math.min(td, 1.5); if (!T.railL[q]) td = Math.max(td, -1.5); }
-  const J = T.features.jump, dj = sDelta(T, J.lip, k.s);
-  if (dj > -5 && dj < 90) td = 0;
-  const p = T.posAt(sA, td, _aiP);
+  const J = T.features.jump;
+  if (J) { const dj = sDelta(T, J.lip, k.s); if (dj > -5 && dj < 90) td = 0; }
+  let p = null;
+  if (T.open) {
+    const F = T.features, LN = F.lanes;
+    if (sDelta(T, LN.s0, k.s) < 70 && sDelta(T, LN.s1, k.s) > -4) td = LN.center[1];                  // 走柱廊中间的窄线
+    for (const zn of F.zones) if (sDelta(T, zn.s0, k.s) < 70 && sDelta(T, zn.s1, k.s) > 0) td = clamp(td, -1.2, 1.2);
+    p = autoBranchTarget(k, T, look);
+  }
+  if (!p) p = T.posAt(sA, td, _aiP);
   const want = Math.atan2(p.x - k.x, p.z - k.z), err = wrapPi(want - k.h);
   inp.steer = clamp(-err * 2.6, -1, 1);
   let kMax = 0; const nL = Math.ceil((10 + k.V * 0.9) / T.ds);
@@ -6751,7 +7975,25 @@ function autoPilotInput(k, T, inp, aggressive) {
   inp.drift = !!aggressive && kMax > 0.017 && Math.abs(err) > 0.1 && k.V > 20;
   inp.nitro = !!aggressive && k.nitro >= 1 && kMax < 0.006 && k.boostT <= 0;
   inp.item = false;
+  if (k._ab) {                                   // 正在抄近路：直线全油门，踩上沙地就喷
+    inp.throttle = 1; inp.brake = 0; inp.drift = false;
+    inp.nitro = !!aggressive && k.nitro >= 1 && k.boostT <= 0 && k.grounded && k.surf !== SURF_ROAD && k.surf !== SURF_STONE;
+  }
   return inp;
+}
+/** 自动驾驶抄近路（k.autoTake 列出要走的近路 id，自检用）：返回近路上的瞄准点，不走则返回 null */
+function autoBranchTarget(k, T, look) {
+  if (!k._ab && k.autoTake) {
+    for (const b of T.features.branches) { const d = sDelta(T, k.s, b.s0); if (d > -6 && d < 12 && k.autoTake.indexOf(b.id) >= 0 && Math.abs(k.d) < 9) { k._ab = b; k._aj = 0; } }
+  }
+  const b = k._ab; if (!b) return null;
+  let j = k._aj, best = 1e12;
+  for (let q = k._aj; q <= Math.min(b.n, k._aj + 30); q++) { const dx = b.bx[q] - k.x, dz = b.bz[q] - k.z, dd = dx * dx + dz * dz; if (dd < best) { best = dd; j = q; } }
+  k._aj = j;
+  const a = Math.min(b.n, j + Math.ceil(look / b.step));
+  if (j >= b.n - 3 || best > 60 * 60) { k._ab = null; return null; }
+  _aiP.x = b.bx[a]; _aiP.z = b.bz[a];
+  return _aiP;
 }
 
 /* ============================================================================
@@ -6766,7 +8008,10 @@ const ITEM_DEFS = [
 const Items = {
   rows: [], boxes: [], clouds: [], waves: [], mesh: null, _m: null, _acc: 0,
 
+  /** 按赛道布置宝匣；切换赛道时可重复调用 */
   init(T) {
+    if (this.mesh) { Engine.scene.remove(this.mesh); this.mesh.geometry.dispose(); this.mesh.material.map.dispose(); this.mesh.material.dispose(); }
+    this.rows = []; this.boxes = []; this.clouds = [];
     const tex = canvasTex(128, 128, (g) => {
       const gr = g.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, '#d8361f'); gr.addColorStop(1, '#8a1410');
       g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
@@ -6777,9 +8022,9 @@ const Items = {
     }, { repeat: false });
     const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
     const p = { x: 0, y: 0, z: 0 };
-    for (const s of T.features.itemRows) {
-      const row = { s, boxes: [] };
-      for (const d of ITEM_LANES) {
+    for (const it of T.features.itemRows) {
+      const s = typeof it === 'number' ? it : it.s, row = { s, boxes: [] };   // 可指定每排宝匣的横向位置
+      for (const d of (it.lanes || ITEM_LANES)) {
         T.posAt(s, d, p);
         const b = { s, d, x: p.x, y: p.y + 1.25, z: p.z, cd: 0, phase: Math.random() * 6 };
         row.boxes.push(b); this.boxes.push(b);
@@ -6791,6 +8036,7 @@ const Items = {
     Engine.scene.add(this.mesh);
     this._m = new THREE.Object3D();
     // 冲击波环（对象池）
+    if (this.waves.length) return;
     const rg = new THREE.RingGeometry(0.8, 1, 48); rg.rotateX(-Math.PI / 2);
     for (let i = 0; i < 4; i++) {
       const m = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: 0xffc860, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
@@ -6820,6 +8066,7 @@ const Items = {
     if (it === 0) { setBoost(k, 1.37, 1.9); k.lastBoostNitro = false; }
     else if (it === 1) {
       const s = T.wrapS(k.s - 5.5), p = T.posAt(s, k.d, { x: 0, y: 0, z: 0 });
+      if (T.open) { p.x = k.x - Math.sin(k.h) * 5.5; p.z = k.z - Math.cos(k.h) * 5.5; p.y = k.y; }   // 开放地形：就放在车后，不一定在古道上
       this.clouds.push({ s, d: k.d, x: p.x, y: p.y, z: p.z, t: 7.5, owner: k, grace: 1.4 });
     } else if (it === 2) { k.shieldT = 6.5; }
     else if (it === 3) {
@@ -6883,7 +8130,7 @@ const Items = {
         let inSmoke = false;
         for (const c of this.clouds) {
           if (c.owner === k && c.grace > 0) continue;
-          if (Math.abs(sDelta(T, k.s, c.s)) < 4.8 && Math.abs(k.d - c.d) < 4.2 && Math.abs(k.y - c.y) < 3.5) {
+          if ((T.open ? Math.hypot(k.x - c.x, k.z - c.z) < 5.4 : Math.abs(sDelta(T, k.s, c.s)) < 4.8 && Math.abs(k.d - c.d) < 4.2) && Math.abs(k.y - c.y) < 3.5) {
             inSmoke = true;
             if (!(k.shieldT > 0)) { if (k.slowT <= 0) Hooks.smoked(k); k.slowT = Math.max(k.slowT, 1.5); }
           }
@@ -6914,12 +8161,14 @@ const Items = {
 };
 
 /* ============================================================================
- * 六 · 音频：全部用 WebAudio 实时合成（引擎声 / 音效 / 五声音阶 BGM）
+ * 六 · 音频：全部用 WebAudio 实时合成（引擎声 / 音效 / 五声音阶 BGM / 沙漠主题 BGM 与沙暴）
  * ========================================================================== */
 const Sound = {
-  ctx: null, comp: null, master: null, musicG: null, sfxG: null, noiseBuf: null, ok: false,
-  eng: null, driftN: null, windN: null, boostN: null,
+  ctx: null, comp: null, master: null, musicG: null, duckG: null, sfxG: null, noiseBuf: null, ok: false,
+  eng: null, driftN: null, windN: null, boostN: null, stormN: null,
   music: { on: false, mode: 'menu', step: 0, next: 0, bpm: 96 },
+  theme: 'wall',      // BGM 主题：'wall' 城墙 / 'desert' 沙漠
+  _stormK: 0,         // 上一次 storm(k) 的强度，避免重复调度
 
   /** 必须在用户手势中调用 */
   init() {
@@ -6930,7 +8179,8 @@ const Sound = {
       this.master = c.createGain();
       const comp = this.comp = c.createDynamicsCompressor(); comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 14; comp.attack.value = 0.002; comp.release.value = 0.15;
       this.master.connect(comp); comp.connect(c.destination);
-      this.musicG = c.createGain(); this.musicG.connect(this.master);
+      this.musicG = c.createGain(); this.duckG = c.createGain();   // duckG：沙暴时压低音乐，平时恒为 1（musicG 音量仍归 applyVolumes 管）
+      this.musicG.connect(this.duckG); this.duckG.connect(this.master);
       this.sfxG = c.createGain(); this.sfxG.connect(this.master);
       const n = c.sampleRate * 2, buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
       for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
@@ -6975,7 +8225,7 @@ const Sound = {
     src.start(t, Math.random()); src.stop(t + dur + 0.02);
   },
 
-  /* ---------- 持续循环：引擎 / 漂移胎噪 / 风噪 / 氮气 ---------- */
+  /* ---------- 持续循环：引擎 / 漂移胎噪 / 风噪 / 氮气 / 沙暴 ---------- */
   _loops() {
     const c = this.ctx;
     const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
@@ -6993,12 +8243,21 @@ const Sound = {
     this.driftN = mkNoise('bandpass', 2100, 3.5);
     this.windN = mkNoise('lowpass', 500, 0.5);
     this.boostN = mkNoise('bandpass', 900, 1.2);
+    // 沙暴风声：同一噪声源分两路（低频呼啸 + 高频沙粒），三个慢速 LFO 调制响度与滤波形成阵风；总量由 storm(k) 控制
+    const ss = c.createBufferSource(), sf = c.createBiquadFilter(), sh = c.createBiquadFilter(), shg = c.createGain(), gust = c.createGain(), sg = c.createGain();
+    ss.buffer = this.noiseBuf; ss.loop = true; sf.type = 'bandpass'; sf.frequency.value = 400; sf.Q.value = 1.1;
+    sh.type = 'highpass'; sh.frequency.value = 3800; sh.Q.value = 0.5; shg.gain.value = 0.22; gust.gain.value = 0.72; sg.gain.value = 0;
+    ss.connect(sf); sf.connect(gust); ss.connect(sh); sh.connect(shg); shg.connect(gust); gust.connect(sg); sg.connect(this.sfxG); ss.start();
+    for (const [hz, depth, dest] of [[0.11, 0.2, gust.gain], [0.29, 0.08, gust.gain], [0.17, 150, sf.frequency]]) {
+      const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = hz; lg.gain.value = depth; l.connect(lg); lg.connect(dest); l.start();
+    }
+    this.stormN = { f: sf, g: sg };
   },
   /** 每帧更新持续音。speedN: 0~1.4；active=false 时全部静音 */
   drive(active, speedN, throttle, drift, boost, air) {
     if (!this.ok) return;
     const t = this.ctx.currentTime, e = this.eng;
-    if (!active) { for (const n of [e.g, this.driftN.g, this.windN.g, this.boostN.g]) n.gain.setTargetAtTime(0, t, 0.08); return; }
+    if (!active) { this.storm(0); for (const n of [e.g, this.driftN.g, this.windN.g, this.boostN.g, this.stormN.g]) n.gain.setTargetAtTime(0, t, 0.08); return; }
     // 模拟换挡：5 个挡位内转速循环上升
     const gearPos = clamp(speedN, 0, 1.35) * 4.2, frac = gearPos - Math.floor(gearPos);
     const rpm = speedN < 0.05 ? 0.12 + throttle * 0.25 : 0.34 + 0.5 * frac + 0.1 * Math.min(speedN, 1.3);
@@ -7013,6 +8272,18 @@ const Sound = {
     this.windN.f.frequency.setTargetAtTime(300 + speedN * 900, t, 0.1);
     this.boostN.g.gain.setTargetAtTime(boost * 0.16, t, 0.05);
     this.boostN.f.frequency.setTargetAtTime(700 + boost * 900, t, 0.08);
+  },
+  /** 每帧调用。k: 0~1 沙暴强度（城墙赛道恒为 0）。驱动风声循环并压低音乐（k=1 时约 38%）；k 未变化时不做任何调度 */
+  storm(k) {
+    if (!this.ok) return;
+    k = Math.round(clamp(+k || 0, 0, 1) * 128) / 128;
+    if (k === this._stormK) return;
+    this._stormK = k;
+    const t = this.ctx.currentTime, d = this.duckG.gain;
+    this.stormN.g.gain.setTargetAtTime(k * 0.42, t, 0.12);
+    this.stormN.f.frequency.setTargetAtTime(400 + k * 320, t, 0.25);
+    d.cancelScheduledValues(t); d.setTargetAtTime(1 - 0.62 * k, t, 0.15);
+    if (k === 0) d.setValueAtTime(1, t + 1.5);            // 收尾钉回精确的 1
   },
 
   /* ---------- 音效 ---------- */
@@ -7046,6 +8317,19 @@ const Sound = {
   smoked() { this.tone(300, 0.4, { type: 'sawtooth', f1: 140, vol: 0.1 }); },
   shock() { this.tone(320, 0.5, { type: 'sine', f1: 40, vol: 0.4 }); this.noise(0.4, { type: 'bandpass', f0: 2000, f1: 200, vol: 0.3, q: 0.7 }); },
   checkpoint() { this.tone(880, 0.09, { type: 'triangle', vol: 0.12 }); this.tone(1319, 0.14, { type: 'triangle', vol: 0.1, delay: 0.07 }); },
+  /** 穿过拱门：三音清亮铃声 + 一记轻柔框鼓 */
+  gate() {
+    [[1174.66, 0.16, 0.1], [1479.98, 0.18, 0.09], [1760, 0.36, 0.085]].forEach(([f, d, v], i) => { this.tone(f, d, { type: 'sine', vol: v, delay: i * 0.06 }); this.tone(f * 2.01, d * 0.6, { type: 'sine', vol: v * 0.25, delay: i * 0.06 }); });
+    this.tone(150, 0.17, { type: 'sine', f1: 72, vol: 0.11 }); this.noise(0.05, { type: 'bandpass', f0: 520, vol: 0.08, q: 1 });
+  },
+  /** 漏过拱门：低沉柔和的两声“不对”（调用方自行限频） */
+  gateMiss() { this.tone(196, 0.12, { type: 'triangle', f1: 180, vol: 0.15 }); this.tone(155.56, 0.2, { type: 'triangle', f1: 138, vol: 0.15, delay: 0.15 }); },
+  /** 沙暴预警：约 3 秒渐强的风啸（呼啸 + 沙粒嘶声 + 低鸣） */
+  stormWarn() {
+    this.noise(3, { type: 'bandpass', f0: 240, f1: 1500, vol: 0.32, q: 1.4, attack: 2.3 });
+    this.noise(3, { type: 'highpass', f0: 2600, f1: 6000, vol: 0.07, attack: 2.6 });
+    this.tone(73.42, 3, { type: 'triangle', f1: 155.56, vol: 0.13, attack: 2.1 }); this.tone(110, 3, { type: 'sine', f1: 233.08, vol: 0.07, attack: 2.3 });
+  },
   lap(final) {
     const seq = final ? [587, 784, 880, 1175] : [587, 880];
     seq.forEach((f, i) => this.tone(f, 0.22, { type: 'triangle', vol: 0.18, delay: i * 0.11 }));
@@ -7071,10 +8355,18 @@ const Sound = {
     const m = this.music;
     if (m.on && m.mode === mode) return;
     m.on = true; m.mode = mode; m.step = 0; m.next = this.ctx.currentTime + 0.12;
-    m.bpm = mode === 'race' ? 138 : mode === 'final' ? 152 : 92;
+    m.bpm = this._bpm(mode);
   },
-  setMusicMode(mode) { const m = this.music; if (!m.on || m.mode === mode) return; m.mode = mode; m.bpm = mode === 'race' ? 138 : mode === 'final' ? 152 : 92; },
+  setMusicMode(mode) { const m = this.music; if (!m.on || m.mode === mode) return; m.mode = mode; m.bpm = this._bpm(mode); },
   stopMusic() { this.music.on = false; },
+  _bpm(mode) { return this.theme === 'desert' ? (mode === 'race' ? 136 : mode === 'final' ? 150 : 84) : (mode === 'race' ? 138 : mode === 'final' ? 152 : 92); },
+  /** 切换 BGM 主题（'wall' | 'desert'）。可在 init() 之前调用；播放中切换时保留 on/mode，从下一个调度点起从头排新曲 */
+  setTheme(name) {
+    name = name === 'desert' ? 'desert' : 'wall';
+    if (name === this.theme) return;
+    this.theme = name;
+    const m = this.music; m.step = 0; m.bpm = this._bpm(m.mode);
+  },
   _pluck(f, t, dur, vol) {
     const c = this.ctx, o1 = c.createOscillator(), o2 = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain(), g2 = c.createGain();
     o1.type = 'triangle'; o2.type = 'sawtooth'; g2.gain.value = 0.3;
@@ -7110,6 +8402,7 @@ const Sound = {
   /** 由主循环每帧调用：前瞻调度未来 0.3s 的音符 */
   tick() {
     const m = this.music; if (!this.ok || !m.on) return;
+    if (this.theme === 'desert') { this._tickDesert(m); return; }
     const now = this.ctx.currentTime;
     if (m.next < now - 0.5) m.next = now + 0.05;        // 标签页挂起后回来，重新对齐
     const stepDur = 60 / m.bpm / 4;                      // 十六分音符
@@ -7129,6 +8422,91 @@ const Sound = {
         if (pos === 3 || pos === 6 || pos === 14 || (bar % 4 === 3 && pos > 11)) this._drum('block', t, 0.2);
         if (m.mode === 'final' && pos % 4 === 1) this._drum('block', t, 0.1);
       } else if (pos === 0 || pos === 10) this._drum('block', t, 0.08);
+      m.next += stepDur; m.step++;
+    }
+  },
+
+  /* ---------- 沙漠主题 BGM：D 希贾兹调式，乌德琴拨弦 + 持续低音 + 手鼓（dum/tek/ka）+ 铃鼓 ---------- */
+  //        A3   Bb3     C4      D4      Eb4     F#4     G4   A4   Bb4     C5      D5      Eb5     F#5     G5
+  DSCALE: [220, 233.08, 261.63, 293.66, 311.13, 369.99, 392, 440, 466.16, 523.25, 587.33, 622.25, 739.99, 783.99],
+  DMEL: [   // 32 小节 × 8 个八分音符，-1 为休止；四段：低音区陈述 / 上行展开 / 同音节奏对答 / 高潮回落
+    3, -1, 4, 5, 4, 3, -1, -1,   5, -1, 6, 5, 4, -1, 3, -1,   3, 4, 5, 6, 7, -1, 6, 5,   6, -1, 5, 4, 3, -1, -1, -1,
+    7, -1, 8, 7, 6, -1, 5, 6,   7, -1, 6, 5, 4, -1, 5, -1,   6, 5, 4, 3, 2, 3, 4, 5,   3, -1, -1, 3, -1, -1, 5, 6,
+    7, 7, 8, 7, 9, -1, 8, 7,   8, -1, 7, 6, 7, -1, -1, -1,   7, 8, 9, 10, 9, 8, 7, 6,   7, -1, 6, 5, 6, -1, -1, 7,
+    10, -1, 11, 10, 9, -1, 8, 9,   10, -1, 9, 8, 7, -1, 8, -1,   9, 8, 7, 6, 5, 6, 7, 5,   6, -1, 5, 4, 3, -1, -1, -1,
+    3, 3, 5, 3, 4, 4, 5, 4,   3, -1, -1, -1, 7, 6, 5, -1,   5, 5, 7, 5, 6, 6, 7, 6,   5, -1, -1, -1, 8, 7, 6, -1,
+    7, 7, 10, 7, 8, 8, 10, 8,   7, -1, 6, -1, 5, -1, 4, -1,   3, 4, 5, 4, 3, 2, 1, 2,   3, -1, -1, -1, -1, -1, 7, 9,
+    10, -1, 11, 12, 11, 10, -1, -1,   12, -1, 11, 10, 9, -1, 10, -1,   11, 10, 9, 8, 9, 8, 7, 6,   7, -1, -1, -1, 7, 8, 9, -1,
+    10, 9, 8, 7, 8, 7, 6, 5,   6, -1, 7, -1, 5, -1, 6, -1,   4, 5, 4, 3, 2, -1, 4, 5,   3, -1, -1, -1, 3, -1, -1, -1,
+  ],
+  DBASS: [   // 每小节根音：D2 73.42 / Eb2 77.78 / G2 98 / A2 110 / Bb2 116.54 / C3 130.81
+    73.42, 73.42, 73.42, 73.42, 98, 73.42, 130.81, 73.42,   73.42, 98, 116.54, 73.42, 98, 116.54, 130.81, 73.42,
+    73.42, 73.42, 73.42, 73.42, 98, 73.42, 73.42, 73.42,   73.42, 73.42, 130.81, 110, 98, 73.42, 77.78, 73.42,
+  ],
+  DBP: [1, 0, 0, 2, 1, 0, 2, 2],   // 竞速低音型（按八分音符，根音倍数，0 不发声），与 dum 对齐
+  /** 乌德琴拨弦：双弦微失谐、拨片亮起音、快衰减；gf>0 时先发该音高再滑入本音（倚音） */
+  _oud(f, t, dur, vol, gf) {
+    const c = this.ctx, o1 = c.createOscillator(), o2 = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain(), g2 = c.createGain();
+    o1.type = 'sawtooth'; o2.type = 'square'; g2.gain.value = 0.5;
+    for (const [o, k] of [[o1, 1], [o2, 1.007]]) {
+      if (gf) { o.frequency.setValueAtTime(gf * k, t); o.frequency.setValueAtTime(gf * k, t + 0.05); o.frequency.exponentialRampToValueAtTime(f * k, t + 0.066); }
+      else { o.frequency.setValueAtTime(f * k * 1.012, t); o.frequency.exponentialRampToValueAtTime(f * k, t + 0.04); }
+    }
+    fl.type = 'lowpass'; fl.Q.value = 2.2; fl.frequency.setValueAtTime(Math.min(7500, f * 8), t); fl.frequency.exponentialRampToValueAtTime(Math.max(350, f * 2.2), t + 0.11); fl.frequency.exponentialRampToValueAtTime(Math.max(300, f * 1.3), t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(vol * 0.42, t + 0.07); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o1.connect(g2); o2.connect(g2); g2.connect(fl); fl.connect(g); g.connect(this.musicG);
+    o1.start(t); o2.start(t); o1.stop(t + dur + 0.02); o2.stop(t + dur + 0.02);
+  },
+  /** 持续低音：两路微失谐锯齿过低通，缓起缓落，逐小节衔接 */
+  _drone(f, t, dur, vol) {
+    const c = this.ctx, o1 = c.createOscillator(), o2 = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain();
+    o1.type = 'sawtooth'; o2.type = 'sawtooth'; o1.frequency.setValueAtTime(f, t); o2.frequency.setValueAtTime(f * 1.006, t);
+    fl.type = 'lowpass'; fl.Q.value = 1.5; fl.frequency.setValueAtTime(f * 2.2, t); fl.frequency.linearRampToValueAtTime(f * 4.5, t + dur * 0.5); fl.frequency.linearRampToValueAtTime(f * 2.2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.18); g.gain.setValueAtTime(vol, t + dur - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.35);
+    o1.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.musicG); o1.start(t); o2.start(t); o1.stop(t + dur + 0.4); o2.stop(t + dur + 0.4);
+  },
+  /** 手鼓：dum 鼓心低音 / tek 鼓边脆响 / ka 轻鬼音 / riq 铃鼓碎响 */
+  _darbuka(kind, t, vol) {
+    const c = this.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    // [滤波类型, 频率, Q, 噪声时长, 噪声倍率, 音头起始频率, 结束频率, 音头时长, 音头倍率]
+    const P = { dum: ['bandpass', 520, 1, 0.045, 0.8, 178, 84, 0.24, 1], tek: ['bandpass', 3300, 3.5, 0.075, 1, 1180, 940, 0.05, 0.28], ka: ['bandpass', 2300, 3, 0.04, 1, 0], riq: ['highpass', 8200, 1, 0.055, 1, 0] }[kind];
+    s.buffer = this.noiseBuf; f.type = P[0]; f.frequency.value = P[1]; f.Q.value = P[2];
+    g.gain.setValueAtTime(vol * P[4], t); g.gain.exponentialRampToValueAtTime(0.0001, t + P[3]);
+    s.connect(f); f.connect(g); g.connect(this.musicG); s.start(t, Math.random()); s.stop(t + P[3] + 0.02);
+    if (!P[5]) return;
+    const o = c.createOscillator(), og = c.createGain();
+    o.frequency.setValueAtTime(P[5], t); o.frequency.exponentialRampToValueAtTime(P[6], t + P[7] * 0.4);
+    og.gain.setValueAtTime(vol * P[8], t); og.gain.exponentialRampToValueAtTime(0.0001, t + P[7]);
+    o.connect(og); og.connect(this.musicG); o.start(t); o.stop(t + P[7] + 0.03);
+  },
+  /** 沙漠主题调度：与 tick() 同构（十六分音符步进，前瞻 0.3s）。menu 旋律减半速（按四分音符走），race/final 按八分音符 */
+  _tickDesert(m) {
+    const now = this.ctx.currentTime;
+    if (m.next < now - 0.5) m.next = now + 0.05;
+    const stepDur = 60 / m.bpm / 4, M = this.DMEL, S = this.DSCALE;
+    while (m.next < now + 0.3) {
+      const st = m.step % 1024, bar = st >> 4, pos = st % 16, t = m.next, menu = m.mode === 'menu', fin = m.mode === 'final';
+      const e = (menu ? st >> 2 : st >> 1) % 256, n = M[e], root = this.DBASS[e >> 3];
+      if ((st & (menu ? 3 : 1)) === 0) {
+        if (n >= 0) this._oud(S[n], t, menu ? 1.5 : 0.4, menu ? 0.11 : 0.17, (e & 7) === 0 && M[(e + 255) % 256] < 0 ? S[n + 1] : 0);   // 乐句起音带上方倚音
+      } else if (fin && (st & 1) && n >= 0 && M[(e + 1) % 256] < 0) this._oud(S[n], t, 0.2, 0.08);   // 决胜圈：长音补一下轮指
+      if (!menu && st >= 512 && pos === 0 && n >= 0) this._oud(S[n] / 2, t, 0.5, 0.07);   // 旋律第二遍：小节头加低八度衬音，免得两遍一模一样
+      if (pos === 0) this._drone(root * 2, t, stepDur * 16, menu ? 0.04 : 0.026);
+      if (menu) {
+        if (pos === 8 && (bar & 1)) this._oud(root * 2, t, 1.8, 0.05);
+        if (pos === 0 || pos === 8) this._darbuka('dum', t, pos ? 0.08 : 0.16);
+        else if (pos === 6) this._darbuka('ka', t, 0.05);
+        else if (pos === 12) this._darbuka('tek', t, 0.09);
+        if (pos === 4 || pos === 14) this._darbuka('riq', t, 0.03);
+      } else {
+        if ((st & 1) === 0) { const k = fin ? ((pos >> 1) & 1 ? 2 : 1) : this.DBP[pos >> 1]; if (k) this._bass(root * k, t, stepDur * (fin ? 1.8 : 2.6), fin ? 0.18 : 0.2); }
+        // maqsum：dum tek – tek dum – tek –（八分），空拍填 ka；每 4 小节末尾一串 tek-ka 过门，每 8 小节末多一记 dum
+        const fill = (bar & 3) === 3 && pos > 11;
+        if (pos === 0 || pos === 8 || ((bar & 7) === 7 && pos === 10)) this._darbuka('dum', t, pos === 10 ? 0.34 : 0.5);
+        else if (pos === 2 || pos === 6 || pos === 12 || (fill && pos === 14)) this._darbuka('tek', t, 0.24);
+        else if (pos === 4 || pos === 10 || pos === 14 || fill || (fin && (pos & 3) === 3)) this._darbuka('ka', t, pos & 1 ? 0.08 : 0.11);
+        if ((pos & 1) === 0 || fin) this._darbuka('riq', t, (pos & 3) === 0 ? 0.07 : pos & 1 ? 0.03 : 0.045);
+      }
       m.next += stepDur; m.step++;
     }
   },
@@ -7183,10 +8561,11 @@ const Input = {
       if (e.pointerId !== st.id) return;
       e.preventDefault();
       const R = this.stickR(); let dx = e.clientX - st.cx, dy = e.clientY - st.cy; const d = Math.hypot(dx, dy);
-      if (d > R) { const k = (d - R) / d; st.cx += dx * k; st.cy += dy * k; dx = e.clientX - st.cx; dy = e.clientY - st.cy; }  // 拖出圈外：轮盘跟手，反打不用先拖回来
-      const a = Math.abs(dx) / R, DZ = 0.14;
-      st.x = a <= DZ ? 0 : sign(dx) * Math.min(1, (a - DZ) / (0.92 - DZ));
-      this.stickDraw(e.clientX, e.clientY);
+      if (d > R) { dx *= R / d; dy *= R / d; }  // 底盘按下后固定不动，摇杆头只在圈内活动
+      const DZ = 0.14;
+      const ax = Math.abs(e.clientX - st.cx) / R;  // 转向取手指真实的左右偏移，斜着拖也能打满
+      st.x = ax <= DZ ? 0 : sign(dx) * Math.min(1, (ax - DZ) / (0.92 - DZ));
+      this.stickDraw(st.cx + dx, st.cy + dy);
     };
     const sUp = (e) => { if (e.pointerId === st.id) this.stickEnd(); };
     zone.addEventListener('pointerdown', sDown); zone.addEventListener('pointermove', sMove);
@@ -7237,7 +8616,8 @@ const UI = {
     for (const id of ['loading', 'title', 'help', 'select', 'hud', 'countdown', 'pause', 'settings', 'result', 'toast', 'rotate', 'fade',
       'rankNum', 'lapNum', 'timeMain', 'timeSub', 'minimap', 'standings', 'msg', 'split', 'wrongway', 'speedNum', 'nitro', 'itemSlot', 'itemGlyph', 'itemName',
       'touch', 'countNum', 'countTip', 'speedfx', 'haze', 'flash', 'titleRecord', 'kartCards', 'selName', 'selDesc', 'selBars',
-      'resTitle', 'resRank', 'resTotal', 'resLap', 'resBest', 'resBadge', 'resList', 'qualityHint']) this.el[id] = $(id);
+      'resTitle', 'resRank', 'resTotal', 'resLap', 'resBest', 'resBadge', 'resList', 'qualityHint',
+      'titleDeco', 'titleSub', 'trackPick', 'gateBox', 'gateNum', 'gateTot', 'oobWarn', 'stormWarn', 'gateArrow', 'storm']) this.el[id] = $(id);
     this.cells = [...this.el.nitro.querySelectorAll('.cell')];
     const S = Save.data.settings, click = (id, fn) => $(id).addEventListener('click', () => { Sound.init(); Sound.click(); if (Game.state === 'title' || Game.state === 'select') Sound.startMusic('menu'); fn(); });
     if (IS_TOUCH && (IS_MOBILE || (window.matchMedia && matchMedia('(pointer: coarse)').matches))) { document.body.classList.add('touch'); this.el.touch.classList.remove('hidden'); Input.mode = 'touch'; }
@@ -7253,6 +8633,13 @@ const UI = {
       b.addEventListener('click', () => { Sound.init(); Sound.click(); S.kart = i; Save.store(); this.refreshSelect(); Game.showcase(i); });
       this.el.kartCards.appendChild(b);
     });
+    // 赛道选择：名称 + 一句话简介；切换时场景随之重建，等于预览
+    for (const id of TRACK_ORDER) {
+      const d = TRACKS[id], b = document.createElement('button'); b.className = 'tcard'; b.dataset.v = id;
+      b.innerHTML = `<b>${d.name}</b><span>${d.blurb}</span>`;
+      b.addEventListener('click', () => { Sound.init(); Sound.click(); Game.setTrack(id); });
+      this.el.trackPick.appendChild(b);
+    }
     this.seg('segTime', () => S.timeOfDay, (v) => { S.timeOfDay = v; Engine.applyTime(v); });
     this.seg('segDiff', () => String(S.difficulty), (v) => { S.difficulty = +v; });
     click('btnSelBack', () => Game.toTitle());
@@ -7279,7 +8666,7 @@ const UI = {
     rng('rngSfx', 'outSfx', 'sfx', pct, () => Sound.applyVolumes());
     rng('rngCam', 'outCam', 'camDist', mul);
     rng('rngSens', 'outSens', 'steerSens', mul);
-    click('btnResetRec', () => { Save.data.records = { bestTotal: null, bestLap: null, bestRank: null, races: 0 }; Save.store(); this.refreshRecord(); this.toast('最佳成绩已清除'); });
+    click('btnResetRec', () => { Save.data.records = {}; Save.store(); this.refreshRecord(); this.toast('两条赛道的最佳成绩已清除'); });
     // 结算
     click('btnAgain', () => { this.show('result', false); Game.startRace(); });
     click('btnResSelect', () => { this.show('result', false); Game.toSelect(); });
@@ -7303,11 +8690,19 @@ const UI = {
     const n = { low: '低', medium: '中', high: '高' }[Engine.qName];
     this.el.qualityHint.textContent = Engine.autoMode ? `自动模式：当前为「${n}」，帧率不足时会自动降档` : `当前画质：${n}`;
   },
+  /** 标题页成绩：按当前赛道显示 */
   refreshRecord() {
-    const r = Save.data.records;
+    const d = World.def || TRACKS.wall, r = Save.rec(d.id);
     this.el.titleRecord.innerHTML = r.bestTotal
-      ? `<span><em>最佳成绩</em>${fmtTime(r.bestTotal)}</span><span><em>最快单圈</em>${fmtTime(r.bestLap)}</span><span><em>最高名次</em>第 ${r.bestRank} 名</span>`
-      : '<span class="none">尚无成绩 · 去城墙上跑一圈吧</span>';
+      ? `<span class="none">${d.name}</span><span><em>最佳成绩</em>${fmtTime(r.bestTotal)}</span><span><em>最快单圈</em>${fmtTime(r.bestLap)}</span><span><em>最高名次</em>第 ${r.bestRank} 名</span>`
+      : `<span class="none">${d.noRecord}</span>`;
+  },
+  /** 切换赛道后刷新标题文案、选中的赛道卡片与成绩 */
+  refreshTrack() {
+    const d = World.def || TRACKS.wall;
+    this.el.titleDeco.textContent = d.title[0]; this.el.titleSub.textContent = d.title[1];
+    [...this.el.trackPick.children].forEach((c) => c.classList.toggle('on', c.dataset.v === d.id));
+    this.refreshRecord();
   },
   /** 标题页飘升的火星（纯 CSS 动画，数量随画质收敛） */
   buildEmbers() {
@@ -7325,6 +8720,7 @@ const UI = {
     this.el.selDesc.textContent = k.desc;
     this.el.selBars.innerHTML = ['极速', '加速', '操控', '氮气'].map((n, i) => `<span>${n}</span><div class="bar"><i style="width:${k.bars[i] * 20}%"></i></div>`).join('');
     $('segTime')._paint(); $('segDiff')._paint();
+    [...this.el.trackPick.children].forEach((c) => c.classList.toggle('on', c.dataset.v === World.id));
   },
   toast(text, ms) { const t = this.el.toast; t.textContent = text; t.classList.remove('hidden'); this._toastT = (ms || 2600) / 1000; },
   msg(text) { const m = this.el.msg; m.textContent = text; m.classList.remove('show'); void m.offsetWidth; m.classList.add('show'); },
@@ -7337,25 +8733,44 @@ const UI = {
     const cv = this.el.minimap, size = Math.round(170 * Math.min(2, window.devicePixelRatio || 1));
     cv.width = cv.height = size; this.mapSize = size; this.map = cv.getContext('2d');
     const bg = document.createElement('canvas'); bg.width = bg.height = size;
-    const g = bg.getContext('2d'), sc = this.mapScale = (size * 0.78) / 600;
-    const X = (x) => size / 2 + (x + 6) * sc, Y = (z) => size / 2 + (z + 6) * sc;
+    // 比例与中心：赛道定义里给了就用（古城墙沿用原值），否则按包围盒自动适配
+    const mp = Object.assign({ fit: 0.8, road: '#b3261e', line: '#f6d98a' }, T.def.map);
+    if (mp.span == null) {
+      let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+      for (let i = 0; i < T.N; i++) { x0 = Math.min(x0, T.px[i]); x1 = Math.max(x1, T.px[i]); z0 = Math.min(z0, T.pz[i]); z1 = Math.max(z1, T.pz[i]); }
+      mp.span = Math.max(x1 - x0, z1 - z0); mp.cx = (x0 + x1) / 2; mp.cz = (z0 + z1) / 2;
+    }
+    const g = bg.getContext('2d'), sc = this.mapScale = (size * mp.fit) / mp.span;
+    const X = (x) => size / 2 + (x - mp.cx) * sc, Y = (z) => size / 2 + (z - mp.cz) * sc;
     this.mx = X; this.my = Y;
     const path = () => { g.beginPath(); for (let i = 0; i < T.N; i += 3) { if (i === 0) g.moveTo(X(T.px[i]), Y(T.pz[i])); else g.lineTo(X(T.px[i]), Y(T.pz[i])); } g.closePath(); };
     g.lineJoin = 'round';
     path(); g.strokeStyle = 'rgba(20,6,5,0.9)'; g.lineWidth = size * 0.07; g.stroke();
-    path(); g.strokeStyle = '#b3261e'; g.lineWidth = size * 0.045; g.stroke();
-    path(); g.strokeStyle = '#f6d98a'; g.lineWidth = size * 0.012; g.stroke();
+    path(); g.strokeStyle = mp.road; g.lineWidth = size * 0.045; g.stroke();
+    path(); g.strokeStyle = mp.line; g.lineWidth = size * 0.012; g.stroke();
     // 起点
     g.fillStyle = '#fff'; g.save(); g.translate(X(T.px[0]), Y(T.pz[0])); g.rotate(Math.atan2(T.tz[0], T.tx[0])); g.fillRect(-size * 0.008, -size * 0.04, size * 0.016, size * 0.08); g.restore();
-    // 城楼 / 飞跃
-    g.fillStyle = '#f6d98a';
-    for (const gt of T.features.gates) { g.beginPath(); g.arc(X(T.px[gt.i]), Y(T.pz[gt.i]), size * 0.022, 0, TAU); g.fill(); }
-    const J = T.features.jump; g.fillStyle = '#6ad0ff'; g.beginPath(); g.arc(X(T.px[J.i1]), Y(T.pz[J.i1]), size * 0.02, 0, TAU); g.fill();
-    this.mapBg = bg;
+    if (T.open) {
+      // 开放赛道：只画古道与检查门（横跨古道的短杠），不画近路
+      g.strokeStyle = '#fff3cf'; g.lineWidth = size * 0.016; g.lineCap = 'round';
+      for (const gt of T.features.gates) { const w = size * 0.05; g.beginPath(); g.moveTo(X(gt.x) - gt.rx * w, Y(gt.z) - gt.rz * w); g.lineTo(X(gt.x) + gt.rx * w, Y(gt.z) + gt.rz * w); g.stroke(); }
+    } else {
+      // 城楼 / 飞跃
+      g.fillStyle = '#f6d98a';
+      for (const gt of T.features.gates) { g.beginPath(); g.arc(X(T.px[gt.i]), Y(T.pz[gt.i]), size * 0.022, 0, TAU); g.fill(); }
+      const J = T.features.jump; g.fillStyle = '#6ad0ff'; g.beginPath(); g.arc(X(T.px[J.i1]), Y(T.pz[J.i1]), size * 0.02, 0, TAU); g.fill();
+    }
+    this.mapBg = bg; this.mapT = T;
   },
   drawMap(karts, player) {
     const g = this.map, s = this.mapSize; if (!g) return;
     g.clearRect(0, 0, s, s); g.drawImage(this.mapBg, 0, 0);
+    const T = this.mapT;
+    if (T && T.open && !player.finished) {          // 下一座检查门：闪动的圆环
+      const G = T.features.gates, gt = player.gate < G.length ? G[player.gate] : T.features.finish;
+      g.strokeStyle = '#ffd27a'; g.lineWidth = s * 0.014;
+      g.beginPath(); g.arc(this.mx(gt.x), this.my(gt.z), s * (0.045 + 0.012 * Math.sin(performance.now() / 160)), 0, TAU); g.stroke();
+    }
     for (const k of karts) {
       if (k === player) continue;
       g.fillStyle = k.color; g.strokeStyle = '#1a0806'; g.lineWidth = s * 0.008;
@@ -7373,6 +8788,15 @@ const UI = {
     this.el.standings.innerHTML = karts.map(() => '<li><i></i><span></span></li>').join('');
     this.el.msg.classList.remove('show'); this.el.split.classList.remove('show'); this.show('wrongway', false);
     this.el.haze.style.opacity = 0; this.el.speedfx.style.opacity = 0;
+    const T = World.T;
+    this.show('gateBox', T.open); this.show('oobWarn', false); this.show('gateArrow', false); this.storm(0, false);
+    if (T.open) this.el.gateTot.textContent = T.features.gates.length;
+  },
+  /** 沙暴的屏幕遮罩与预警横幅 */
+  storm(k, warn) {
+    const v = Math.round(k * 20);
+    if (this._cache._storm !== v) { this._cache._storm = v; const e = this.el.storm; e.style.opacity = (v * 0.045).toFixed(3); e.classList.toggle('on', v > 0); e.style.setProperty('--sc', Engine.tod === 'night' ? '86, 66, 52' : '196, 138, 82'); }   // 按量化后的 v 取值：沙暴散尽时归零
+    if (this._cache._sw !== warn) { this._cache._sw = warn; this.show('stormWarn', warn); }
   },
   hud(dt, G) {
     const p = G.player, R = G.R;
@@ -7419,6 +8843,26 @@ const UI = {
     if (this._cache._hz !== hz) { this._cache._hz = hz; this.el.haze.style.opacity = hz; }
     const ww = p.wrongT > 1.2;
     if (this._cache._ww !== ww) { this._cache._ww = ww; this.show('wrongway', ww); }
+    const T = World.T;
+    if (T.open) {
+      const GT = T.features.gates;
+      this.set('gateNum', String(Math.min(p.gate, GT.length)));
+      const oob = p.route > 46 && !p.finished;
+      if (this._cache._oob !== oob) { this._cache._oob = oob; this.show('oobWarn', oob); }
+      // 漏门：箭头贴着屏幕边缘指向那座拱门（按镜头朝向换算）
+      const miss = p.missT > 0.5 && !p.finished && !oob;
+      if (this._cache._miss !== miss) { this._cache._miss = miss; this.show('gateArrow', miss); }
+      if (miss) {
+        const gt = p.gate < GT.length ? GT[p.gate] : T.features.finish, a = wrapPi(Math.atan2(gt.x - p.x, gt.z - p.z) - G.cam.yaw);
+        const q = Math.round(a * 30);
+        if (this._cache._ga !== q) {
+          this._cache._ga = q;
+          const e = this.el.gateArrow, x = -Math.sin(a) * window.innerWidth * 0.4, y = -Math.cos(a) * window.innerHeight * 0.33;
+          e.style.transform = `translate(${x.toFixed(0)}px, ${y.toFixed(0)}px)`;
+          e.firstChild.style.setProperty('--rot', (Math.atan2(-Math.cos(a), -Math.sin(a)) * 57.3).toFixed(0) + 'deg');
+        }
+      }
+    }
   },
   /** 与比赛无关的计时器（toast / 分段成绩） */
   tick(dt) {
@@ -7439,7 +8883,7 @@ const UI = {
     this.el.resRank.textContent = p.rank;
     this.el.resTotal.textContent = fmtTime(p.finishTime);
     this.el.resLap.textContent = fmtTime(info.bestLap);
-    this.el.resBest.textContent = fmtTime(Save.data.records.bestTotal);
+    this.el.resBest.textContent = fmtTime(Save.rec(World.id).bestTotal);
     this.el.resBadge.classList.toggle('hidden', !(info.newTotal || info.newLap));
     this.el.resBadge.textContent = info.newTotal ? '新纪录！' : '最快单圈刷新！';
     this.el.resList.innerHTML = info.rows.map((r, i) =>
@@ -7479,7 +8923,7 @@ const Hooks = {
     if (k.isPlayer || this.near(k)) for (let i = 0; i < 10; i++) { const a = Math.random() * TAU; Engine.fx.emit(k.x + Math.cos(a), k.y + 0.2, k.z + Math.sin(a), Math.cos(a) * 5, 1 + Math.random() * 2, Math.sin(a) * 5, 0.6, 1.2, 3.2, 0.7, 0.68, 0.62, 0.4, 0, 2); }
   },
   fall(k) { if (k.isPlayer) { Sound.fall(); UI.msg('坠 落 ！'); } },
-  respawn(k) { if (k.isPlayer) { Sound.respawn(); UI.toast('已重置回赛道（损失时间）', 1800); Game.cam.snap = true; } },
+  respawn(k, oob) { if (k.isPlayer) { Sound.respawn(); UI.toast(oob ? '偏离赛道太远，已复位到古道（损失时间）' : '已重置回赛道（损失时间）', 1800); Game.cam.snap = true; } },
   pad(k) { if (k.isPlayer) { Sound.pad(); Game.cam.kick = 0.6; } },
   itemPicked(k) { if (k.isPlayer) Sound.pickup(); },
   itemReady(k) { if (k.isPlayer) Sound.itemReady(); },
@@ -7500,6 +8944,7 @@ const Game = {
   R: { karts: [], player: null, difficulty: 1, started: false, time: 0, raceTime: 0 },
   countdown: 0, countShown: 0, accelSim: -99, startWindow: 0, finishT: 0, resultShown: false, bestSplits: [],
   cam: { yaw: 0, baseY: 0, boost: 0, shake: 0, kick: 0, orbit: 0, fov: 68, snap: true, menuS: 0 },
+  sto: { st: 0, t: 0, k: 0 }, dim: 0, busy: false, beamAt: undefined,    // 沙暴状态机 / 室内压暗 / 正在换赛道 / 光柱所在的门
 
   boot() {
     Save.load();
@@ -7507,17 +8952,36 @@ const Game = {
     Engine.tod = Save.data.settings.timeOfDay;
     Engine.applyQualitySetting(Save.data.settings.quality);
     KartArt.init();
-    World.build();
+    const S0 = Save.data.settings;
+    if (!TRACKS[S0.track]) S0.track = 'wall';
+    World.build(S0.track);
     Items.init(World.T);
     Input.init();
     UI.init();
-    UI.buildMap(World.T);
+    UI.buildMap(World.T); UI.refreshTrack();
+    Sound.setTheme(World.def.music);
     Engine.applyTime(Save.data.settings.timeOfDay);
     document.addEventListener('visibilitychange', () => { if (document.hidden && (this.state === 'race' || this.state === 'countdown') && !this.paused) this.togglePause(); });
     this.state = 'title';
     UI.show('loading', false); UI.show('title', true);
     this.last = performance.now();
     requestAnimationFrame((t) => this.frame(t));
+  },
+
+  /** 换赛道：重建场景、宝匣、小地图；选车页上会立刻看到新赛道 */
+  setTrack(id) {
+    if (!TRACKS[id] || id === World.id || this.busy) return;
+    Save.data.settings.track = id; Save.store();
+    UI.el.loading.querySelector('p').textContent = TRACKS[id].loading; UI.show('loading', true);
+    this.busy = true;
+    setTimeout(() => {
+      try {
+        this.clearRace(); this.hideShowcase();
+        World.build(id); Items.init(World.T); UI.buildMap(World.T); UI.refreshTrack(); Sound.setTheme(World.def.music);
+        this.cam.menuS = 0;
+        if (this.state === 'select') this.showcase(Save.data.settings.kart);
+      } finally { UI.show('loading', false); this.busy = false; this.last = performance.now(); }
+    }, 40);
   },
 
   /* ---------- 状态切换 ---------- */
@@ -7530,6 +8994,9 @@ const Game = {
     this.karts = []; this.player = null; this.R.karts = []; this.R.player = null; this.R.started = false;
     Items.reset(); Engine.fx.clear(); Engine.fxAdd.clear();
     Sound.drive(false);
+    this.sto.st = 0; this.sto.t = 0; this.sto.k = 0; this.dim = 0; Sound.storm(0); UI.storm(0, false);
+    if (World.desert) { Desert.setBeam(null); Engine.setStorm(0, 0); }
+    this.beamAt = undefined;
   },
   toTitle() {
     this.clearRace(); this.hideShowcase(); this.paused = false; Sound.suspend(false);
@@ -7562,6 +9029,7 @@ const Game = {
   },
 
   startRace() {
+    if (this.busy) return;
     const S = Save.data.settings, T = World.T;
     this.clearRace(); this.hideShowcase();
     Engine.applyTime(S.timeOfDay);
@@ -7619,6 +9087,11 @@ const Game = {
         this.afterSim(sim);
       } else Input.clearEdges();
       Items.update(sim, this.time, (this.state === 'race' || this.state === 'countdown') ? this.R : null);
+      if (World.desert) {                                   // 沙暴与殿内压暗只在比赛中生效
+        const racing = this.state === 'race' || this.state === 'countdown', k = racing ? this.sto.k : 0;
+        Engine.setStorm(Math.round(k * 50) / 50, racing ? Math.round(this.dim * 25) / 25 : 0);
+        Sound.storm(k); UI.storm(k, racing && this.sto.st === 2);
+      }
       World.update(this.time);
       Engine.fx.update(sim); Engine.fxAdd.update(sim);
       this.updateCamera(sim);
@@ -7644,22 +9117,30 @@ const Game = {
         this.startWindow -= h;
         if (this.accelSim >= 0) { this.grantStart(this.accelSim < 0.22 ? 2 : 1); this.startWindow = 0; }
       }
-      if (p.finished || this.auto) autoPilotInput(p, T, inp, this.auto && !p.finished);
+      if (p.finished || this.auto) autoPilotInput(p, T, inp, this.auto && !p.finished && !this.calm);   // calm：自检用的稳健自动驾驶
       if (inp.reset && !p.finished && !p.falling && p.frozenT <= 0) { respawnKart(p, T); Hooks.respawn(p); }
       if (inp.item && !p.finished && p.item >= 0 && p.spinT <= 0 && !p.falling) Items.use(p, R);
       if (this.auto && !p.finished && p.item >= 0 && Math.random() < h) Items.use(p, R);
+      const x0 = p.x, z0 = p.z;
       kartPhysics(p, inp, h, T, Hooks);
+      if (T.open && !p.finished) {
+        const ev = openGateStep(p, T, x0, z0, h);
+        if (ev === 1) this.onGate(p);
+        else if (ev === 2) this.lapDone(p, R.raceTime - _gateOver / Math.max(5, Math.abs(p.V)));
+        this.stormStep(h);
+      }
     } else {
       // 倒计时阶段：原地待命
       kartVertical(p, T, p.idx, 0, p.d, h);
     }
     // 逆行检测
-    if (R.started && !p.finished && Math.abs(p.V) > 4 && Math.cos(wrapPi(p.phi - T.theta[p.idx])) * sign(p.V) < -0.3) p.wrongT += h; else p.wrongT = 0;
+    if (R.started && !p.finished && Math.abs(p.V) > 4 && Math.cos(wrapPi(p.phi - T.theta[p.idx])) * sign(p.V) < -0.3 && (!T.open || Math.abs(p.d) < T.rw[p.idx] + 4)) p.wrongT += h; else p.wrongT = 0;
 
     // —— AI ——
     for (const k of this.karts) {
       if (k === p) continue;
       aiStep(k, h, T, R);
+      if (T.open) openGateStep(k, T, k.x, k.z, h);
       Items.aiThink(k, h, R);
     }
     this.collide(h);
@@ -7668,6 +9149,7 @@ const Game = {
     if (R.started) {
       for (const k of this.karts) {
         if (k.finished) continue;
+        if (T.open && k.isPlayer) continue;                  // 开放赛道：玩家的圈数由检查门规则判定（见上）
         const lap = Math.floor(k.prog / T.L);
         if (k.isPlayer) {
           const cps = T.features.checkpoints, lapS = k.prog - k.lap * T.L;
@@ -7675,15 +9157,39 @@ const Game = {
         }
         if (lap > k.lap) {
           const over = (k.prog - lap * T.L) / Math.max(5, Math.abs(k.V)), tCross = R.raceTime - over;
-          k.lapTimes.push(tCross - k.lapStart); k.lapStart = tCross; k.lap = lap; k.nextCp = 0;
-          if (k.lap >= LAPS) { k.finished = true; k.finishTime = tCross; if (k.isPlayer) this.onPlayerFinish(); }
-          else if (k.isPlayer) this.onLap(k);
+          k.lap = lap; this.lapDone(k, tCross);
         }
       }
     }
     // —— 名次 ——
     this.ranked.sort((a, b) => (a.finished ? 1e9 - a.finishTime : a.prog) < (b.finished ? 1e9 - b.finishTime : b.prog) ? 1 : -1);
     for (let i = 0; i < this.ranked.length; i++) this.ranked[i].rank = i + 1;
+  },
+
+  /** 完成一圈（k.lap 已更新） */
+  lapDone(k, tCross) {
+    k.lapTimes.push(tCross - k.lapStart); k.lapStart = tCross; k.nextCp = 0;
+    if (k.lap >= LAPS) { k.finished = true; k.finishTime = tCross; if (k.isPlayer) this.onPlayerFinish(); }
+    else if (k.isPlayer) this.onLap(k);
+  },
+  /** 玩家通过一座检查门：提示音 + 分段成绩 */
+  onGate(k) {
+    const idx = k.gate - 1, n = World.T.features.gates.length, t = this.R.raceTime - k.lapStart, best = this.bestSplits[idx];
+    Sound.gate();
+    const name = `拱门 ${idx + 1}/${n}`;
+    if (best == null) UI.split(`${name}　<b>${fmtTime(t)}</b>`);
+    else { const d = t - best; UI.split(`${name}　<b class="${d <= 0 ? 'fast' : 'slow'}">${d <= 0 ? '−' : '+'}${Math.abs(d).toFixed(2)}</b>`); }
+    if (best == null || t < best) this.bestSplits[idx] = t;
+  },
+  /** 沙暴：第 2 圈触发一次。预警 3 秒 → 约 20 秒 → 消散；只影响能见度 */
+  stormStep(h) {
+    const st = World.T.features.storm, S = this.sto, p = this.player;
+    if (!st) return;
+    if (S.st === 0) { if (p.lap >= st.lap) { S.st = 1; S.t = this.stormDelay == null ? 5 + Math.random() * 9 : this.stormDelay; } }
+    else if (S.st === 1) { S.t -= h; if (S.t <= 0) { S.st = 2; S.t = 3; Sound.stormWarn(); UI.toast('风声渐起——沙暴将至，盯紧门上的光柱', 3200); } }
+    else if (S.st === 2) { S.t -= h; if (S.t <= 0) { S.st = 3; S.t = 20; UI.msg('沙 暴 ！'); } }
+    else if (S.st === 3) { S.t -= h; if (S.t <= 0) S.st = 4; }
+    S.k = clamp(S.k + (S.st === 3 ? h / 2.4 : -h / 3.6), 0, 1);
   },
 
   go() {
@@ -7720,7 +9226,7 @@ const Game = {
     if (final) Sound.setMusicMode('final');
   },
   onPlayerFinish() {
-    const p = this.player, rec = Save.data.records;
+    const p = this.player, rec = Save.rec(World.id);
     // 名次即时结算
     let rank = 1; for (const k of this.karts) if (k !== p && k.finished && k.finishTime < p.finishTime) rank++;
     p.rank = rank;
@@ -7758,9 +9264,12 @@ const Game = {
       if (dist > 2.15 || dist < 1e-4 || Math.abs(p.y - a.y) > 1.6) continue;
       const nx = dx / dist, nz = dz / dist, ov = 2.15 - dist, wp = a.type.weight / (a.type.weight + p.type.weight);
       p.x += nx * ov * wp; p.z += nz * ov * wp;
-      const i = a.idx, ar = nx * T.rx[i] + nz * T.rz[i], at = nx * T.tx[i] + nz * T.tz[i];
-      a.ai.d = clamp(a.ai.d - ar * ov * (1 - wp), -HALF_W + 1, HALF_W - 1); a.ai.s = T.wrapS(a.ai.s - at * ov * (1 - wp) * 0.5);
-      const pvx = Math.sin(p.phi) * p.V, pvz = Math.cos(p.phi) * p.V, avx = T.tx[i] * a.V, avz = T.tz[i] * a.V;
+      const i = a.idx, A = a.ai, br = A.br;                 // 走近路的 AI 以近路方向为准
+      const txi = br ? A.hx : T.tx[i], tzi = br ? A.hz : T.tz[i], rxi = br ? -A.hz : T.rx[i], rzi = br ? A.hx : T.rz[i];
+      const ar = nx * rxi + nz * rzi, at = nx * txi + nz * tzi;
+      if (br) { A.bd = clamp(A.bd - ar * ov * (1 - wp), -3, 3); A.bu = Math.max(0, A.bu - at * ov * (1 - wp) * 0.5); }
+      else { a.ai.d = clamp(a.ai.d - ar * ov * (1 - wp), -T.halfW + 1, T.halfW - 1); a.ai.s = T.wrapS(a.ai.s - at * ov * (1 - wp) * 0.5); }
+      const pvx = Math.sin(p.phi) * p.V, pvz = Math.cos(p.phi) * p.V, avx = txi * a.V, avz = tzi * a.V;
       const vrel = (pvx - avx) * nx + (pvz - avz) * nz;
       if (vrel < 0) {
         const jx = nx * vrel * 1.25, jz = nz * vrel * 1.25;
@@ -7772,11 +9281,11 @@ const Game = {
     }
     // AI 之间：横向分离
     for (let i = 0; i < ks.length; i++) for (let j = i + 1; j < ks.length; j++) {
-      const a = ks[i], b = ks[j]; if (!a.ai || !b.ai) continue;
+      const a = ks[i], b = ks[j]; if (!a.ai || !b.ai || a.ai.br || b.ai.br) continue;
       const dsv = sDelta(T, a.s, b.s), dd = a.ai.d - b.ai.d;
       if (Math.abs(dsv) < 2.5 && Math.abs(dd) < 1.9) {
         const push = (1.9 - Math.abs(dd)) * 0.5 * (dd >= 0 ? 1 : -1);
-        a.ai.d = clamp(a.ai.d + push, -HALF_W + 1, HALF_W - 1); b.ai.d = clamp(b.ai.d - push, -HALF_W + 1, HALF_W - 1);
+        a.ai.d = clamp(a.ai.d + push, -T.halfW + 1, T.halfW - 1); b.ai.d = clamp(b.ai.d - push, -T.halfW + 1, T.halfW - 1);
         if (dsv < 0) a.V = Math.min(a.V, b.V + 0.5); else b.V = Math.min(b.V, a.V + 0.5);
       }
     }
@@ -7806,11 +9315,40 @@ const Game = {
         }
       }
     }
+    if (T.open) this.desertFx(dt);
     UI.hud(dt, this);
     const sp = Math.abs(p.V) / p.type.maxSpeed, slip = Math.abs(Math.sin(wrapPi(p.h - p.phi)));
     Sound.drive(R.started || this.state === 'countdown', sp, (p.finished ? 0.5 : (Input.mode === 'touch' ? 1 : (Input.throttleHeld() ? 1 : 0))) * (R.started ? 1 : 0.6),
       p.grounded && (p.drifting || slip > 0.25) && sp > 0.25 ? Math.min(1, 0.4 + slip * 1.5) : 0, p.boostT > 0 ? 1 : 0, !p.grounded);
     if (p.finished && !this.resultShown) { this.finishT -= dt; if (this.finishT <= 0) this.showResult(); }
+  },
+
+  /** 沙漠赛道每帧的表现：车轮扬起的尘尾（远处也看得出对手走哪条线）、门上光柱、殿内压暗 */
+  desertFx(dt) {
+    const T = World.T, p = this.player, F = T.features, br = Engine.preset.dust || 1, fade = 1 - this.sto.k * 0.75;
+    for (const k of this.karts) {
+      if (!k.grounded || Math.abs(k.V) < 7 || k.surf >= SURF_STONE || !k.model.group.visible) continue;
+      const dist = k === p ? 0 : Math.hypot(k.x - p.x, k.z - p.z);
+      if (dist > 560) continue;
+      const far = dist > 70, water = k.surf === SURF_WATER, soft = k.surf === SURF_SOFT;
+      k.dustAcc = (k.dustAcc || 0) + (far ? 8 : 24) * (soft ? 1.4 : 1) * Math.min(1, Math.abs(k.V) / 28) * dt;
+      const fx = Math.sin(k.h), fz = Math.cos(k.h);
+      while (k.dustAcc >= 1) {
+        k.dustAcc -= 1;
+        const ox = (Math.random() - 0.5) * 1.6, x = k.x - fx * 1.1 + fz * ox, z = k.z - fz * 1.1 - fx * ox;
+        if (water) Engine.fx.emit(x, k.y + 0.5, z, (Math.random() - 0.5) * 4 - fx * 2, 3 + Math.random() * 3, (Math.random() - 0.5) * 4 - fz * 2, 0.5, 0.5, 1.6, 0.8 * br + 0.1, 0.9 * br + 0.1, br, 0.5, 13, 0.5);
+        else {
+          const c = soft ? 0.72 : 1;
+          Engine.fx.emit(x, k.y + 0.25, z, -fx * k.V * 0.1 + (Math.random() - 0.5) * 2.4, 1 + Math.random() * (far ? 2.6 : 1.6), -fz * k.V * 0.1 + (Math.random() - 0.5) * 2.4,
+            far ? 2.3 : 1.1, far ? 2.4 : 0.8, far ? 9.5 : 3.6, 0.88 * c * br, 0.72 * c * br, 0.5 * c * br, (far ? 0.44 : 0.3) * fade, -0.6, 1.1);
+        }
+      }
+    }
+    const gt = p.finished ? null : (p.gate < F.gates.length ? F.gates[p.gate] : F.finish);
+    if (gt !== this.beamAt) { this.beamAt = gt; Desert.setBeam(gt); }
+    const Tm = F.temple, inside = p.x < Tm.roof0 - 4 && p.x > Tm.roof1 - 8 && Math.abs(p.z - Tm.z) < Tm.hall + 1;
+    this.dim = damp(this.dim, inside ? 1 : 0, inside ? 2.6 : 4, dt);
+    if (p.missT > 0.5 && !p.finished) { this.missBeep = (this.missBeep || 0) - dt; if (this.missBeep <= 0) { this.missBeep = 2.6; Sound.gateMiss(); } } else this.missBeep = 0;
   },
 
   /* ---------- 镜头 ---------- */
@@ -7820,7 +9358,8 @@ const Game = {
     if (this.state === 'title') {
       // 沿城墙内侧巡游
       C.menuS = (C.menuS + dt * 9) % T.L;
-      const inn = -T.features.outer, a = T.posAt(C.menuS, inn * (19 + Math.sin(this.time * 0.13) * 3), _tp);
+      const inn = -T.features.outer, a = T.posAt(C.menuS, inn * ((T.open ? 27 : 19) + Math.sin(this.time * 0.13) * 3), _tp);
+      if (T.open) a.y = Math.max(a.y, T.groundXZ(a.x, a.z, T.idx(C.menuS)) - 2);      // 沿古道外侧巡游：别钻进沙丘和神殿
       cam.position.set(a.x, a.y + 13.5 + Math.sin(this.time * 0.21) * 2.2, a.z);
       const b = T.posAt(C.menuS + 70, -inn * 3, _tp);
       cam.lookAt(b.x, b.y + 4, b.z);
@@ -7849,7 +9388,8 @@ const Game = {
       let cx = k.x - Math.sin(yaw) * dist, cz = k.z - Math.cos(yaw) * dist, cy = C.baseY + hgt;
       // 镜头不钻入路面
       const P = T.project(cx, cz, k.idx, _cp);
-      if (Math.abs(P.d) < 9) cy = Math.max(cy, T.heightAt(P.i, P.t) + 1.25);
+      if (T.open) cy = Math.max(cy, T.groundK(cx, cz, P.i, P.t, P.d, 1e9) + 1.25);
+      else if (Math.abs(P.d) < 9) cy = Math.max(cy, T.heightAt(P.i, P.t) + 1.25);
       const sh = C.shake;
       cam.position.set(cx + (Math.random() - 0.5) * sh, cy + (Math.random() - 0.5) * sh, cz + (Math.random() - 0.5) * sh);
       const lookY = C.baseY * 0.35 + k.y * 0.65 + 1.25;
