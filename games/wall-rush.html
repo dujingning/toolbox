@@ -7839,11 +7839,17 @@ window.Engine = Engine;
 (function setupFullscreen() {
   const d = document, el = d.documentElement;
   const req = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (!IS_MOBILE || !req) return;
+  if (!IS_MOBILE && !IS_TOUCH) return;
   d.body.classList.add('can-fs');
   const isFs = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
   const sync = () => { const t = isFs() ? '退出全屏' : '全屏'; const a = d.getElementById('btnFullTitle'); if (a) a.textContent = t; };
   const toggle = () => {
+    if (!req) {
+      const ios = /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent);
+      alert(ios ? '此浏览器不支持网页全屏。\n请在 Safari 中点「分享」→「添加到主屏幕」，从桌面图标打开即为全屏。'
+                : '当前浏览器不支持全屏（常见于微信、QQ 内置浏览器）。\n请点右上角「…」选择在浏览器中打开。');
+      return;
+    }
     if (isFs()) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return; }
     Promise.resolve(req.call(el)).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* 不支持锁定方向 */ } }).catch(() => {});
   };
