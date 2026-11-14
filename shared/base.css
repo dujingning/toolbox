@@ -144,4 +144,11 @@ input[type=color] { width:36px; height:32px; padding:2px; border:1px solid var(-
 .toast.out { opacity:0; transform:translateY(6px); }
 @keyframes tb-in { from { opacity:0; transform:translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+/* 工具专属色：元素加 .tint 并设置 --h（OKLCH 色相），即可使用 var(--tint) / var(--tint-soft) */
+.tint { --tint:var(--link); --tint-soft:var(--accent-soft); }
+@supports (color: oklch(0 0 0)) {
+  .tint { --tint:oklch(.54 .17 var(--h, 260)); --tint-soft:oklch(.62 .15 var(--h, 260) / .12); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); } }
+  :root[data-theme=dark] .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); }
+}
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }

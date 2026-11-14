@@ -153,6 +153,13 @@ input[type=color] { width:36px; height:32px; padding:2px; border:1px solid var(-
 .toast.out { opacity:0; transform:translateY(6px); }
 @keyframes tb-in { from { opacity:0; transform:translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+/* 工具专属色：元素加 .tint 并设置 --h（OKLCH 色相），即可使用 var(--tint) / var(--tint-soft) */
+.tint { --tint:var(--link); --tint-soft:var(--accent-soft); }
+@supports (color: oklch(0 0 0)) {
+  .tint { --tint:oklch(.54 .17 var(--h, 260)); --tint-soft:oklch(.62 .15 var(--h, 260) / .12); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); } }
+  :root[data-theme=dark] .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); }
+}
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 /* @shared-css:end */
 .controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:14px; }
@@ -214,14 +221,14 @@ const TB = (() => {
     auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
   };
   const TOOLS = [
-    { id: "qrcode", name: "文本转二维码", short: "二维码", icon: I.qrcode, desc: "支持中文与 emoji，可调纠错、尺寸与颜色，导出 PNG / SVG", keys: "二维码 qr qrcode 文本 链接 生成" },
-    { id: "json", name: "JSON 格式化", short: "JSON", icon: I.json, desc: "美化、压缩、转义，实时校验并定位错误行列", keys: "json 格式化 校验 压缩 美化 转义" },
-    { id: "base64-url", name: "Base64 / URL 编解码", short: "编解码", icon: I.codec, desc: "实时转换，UTF-8 安全，支持 URL-safe、文件与二进制结果", keys: "base64 url 编码 解码 encode decode" },
-    { id: "timestamp", name: "时间戳转换", short: "时间戳", icon: I.clock, desc: "时间戳与日期互转，自动识别秒 / 毫秒 / 微秒", keys: "时间戳 timestamp unix 日期 时间 时区" },
-    { id: "hash", name: "哈希计算", short: "哈希", icon: I.hash, desc: "MD5、SHA-1 / 256 / 384 / 512，支持文本和文件，可比对校验值", keys: "哈希 hash md5 sha sha1 sha256 校验 摘要 文件" },
-    { id: "password", name: "随机密码", short: "密码", icon: I.lock, desc: "加密安全的随机密码，强度提示，可批量生成", keys: "密码 password 随机 生成 强度" },
-    { id: "color", name: "颜色转换 / 取色", short: "颜色", icon: I.droplet, desc: "HEX / RGB / HSL / CMYK 互转，屏幕与图片取色，对比度检查", keys: "颜色 color 取色 吸管 hex rgb hsl cmyk 对比度 配色" },
-    { id: "image-base64", name: "图片转 Base64", short: "图片 Base64", icon: I.image, desc: "图片与 Data URI 互转，可压缩、转格式、缩放", keys: "图片 image base64 data uri 压缩 转换 图片转" },
+    { id: "qrcode", name: "文本转二维码", short: "二维码", icon: I.qrcode, desc: "支持中文与 emoji，可调纠错、尺寸与颜色，导出 PNG / SVG", keys: "二维码 qr qrcode 文本 链接 生成 erweima ewm", hue: 260 },
+    { id: "json", name: "JSON 格式化", short: "JSON", icon: I.json, desc: "美化、压缩、转义，实时校验并定位错误行列", keys: "json 格式化 校验 压缩 美化 转义 geshihua gsh", hue: 55 },
+    { id: "base64-url", name: "Base64 / URL 编解码", short: "编解码", icon: I.codec, desc: "实时转换，UTF-8 安全，支持 URL-safe、文件与二进制结果", keys: "base64 url 编码 解码 encode decode bianma jiema bjm", hue: 195 },
+    { id: "timestamp", name: "时间戳转换", short: "时间戳", icon: I.clock, desc: "时间戳与日期互转，自动识别秒 / 毫秒 / 微秒", keys: "时间戳 timestamp unix 日期 时间 时区 shijianchuo sjc", hue: 290 },
+    { id: "hash", name: "哈希计算", short: "哈希", icon: I.hash, desc: "MD5、SHA-1 / 256 / 384 / 512，支持文本和文件，可比对校验值", keys: "哈希 hash md5 sha sha1 sha256 校验 摘要 文件 haxi hx jiaoyan", hue: 330 },
+    { id: "password", name: "随机密码", short: "密码", icon: I.lock, desc: "加密安全的随机密码，强度提示，可批量生成", keys: "密码 password 随机 生成 强度 mima mm suiji", hue: 150 },
+    { id: "color", name: "颜色转换 / 取色", short: "颜色", icon: I.droplet, desc: "HEX / RGB / HSL / CMYK 互转，屏幕与图片取色，对比度检查", keys: "颜色 color 取色 吸管 hex rgb hsl cmyk 对比度 配色 yanse ys quse", hue: 15 },
+    { id: "image-base64", name: "图片转 Base64", short: "图片 Base64", icon: I.image, desc: "图片与 Data URI 互转，可压缩、转格式、缩放", keys: "图片 image base64 data uri 压缩 转换 图片转 tupian tp", hue: 85 },
   ].map(t => ({ ...t, href: `tools/${t.id}.html` }));
 
   const svg = (p, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -318,6 +325,8 @@ const TB = (() => {
     const l = document.createElement("link"); l.rel = "icon"; l.href = "data:image/svg+xml," + encodeURIComponent(s); document.head.appendChild(l);
   }
   favicon();
+  // 记录最近使用的工具，首页据此显示「最近使用」
+  if (root.dataset.tool) { const r = store.get("recent", []); store.set("recent", [root.dataset.tool, ...(Array.isArray(r) ? r : []).filter(x => x !== root.dataset.tool)].slice(0, 6)); }
   document.addEventListener("DOMContentLoaded", () => {
     buildHeader();
     const af = document.querySelector("[data-autofocus]");

@@ -153,31 +153,96 @@ input[type=color] { width:36px; height:32px; padding:2px; border:1px solid var(-
 .toast.out { opacity:0; transform:translateY(6px); }
 @keyframes tb-in { from { opacity:0; transform:translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+/* 工具专属色：元素加 .tint 并设置 --h（OKLCH 色相），即可使用 var(--tint) / var(--tint-soft) */
+.tint { --tint:var(--link); --tint-soft:var(--accent-soft); }
+@supports (color: oklch(0 0 0)) {
+  .tint { --tint:oklch(.54 .17 var(--h, 260)); --tint-soft:oklch(.62 .15 var(--h, 260) / .12); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme=light]) .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); } }
+  :root[data-theme=dark] .tint { --tint:oklch(.8 .12 var(--h, 260)); --tint-soft:oklch(.7 .13 var(--h, 260) / .17); }
+}
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 /* @shared-css:end */
-.hero { padding:28px 0 24px; }
-.hero h1 { font-size:30px; line-height:1.2; margin:0 0 8px; letter-spacing:-.02em; }
-.hero p { margin:0 0 20px; color:var(--muted); font-size:16px; }
+/* 首页：头图区 */
+.hero { position:relative; isolation:isolate; padding:28px 0 22px; }
+.hero::before { content:""; position:absolute; z-index:-1; inset:-24px -16px -8px; pointer-events:none;
+  background:radial-gradient(circle, var(--border-strong) 1px, transparent 1.6px) 0 0 / 22px 22px;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 22% 18%, #000 10%, transparent 72%); mask-image:radial-gradient(ellipse 70% 80% at 22% 18%, #000 10%, transparent 72%); opacity:.7; }
+.hero::after { content:""; position:absolute; z-index:-1; top:-120px; left:-10%; width:70%; height:360px; pointer-events:none;
+  background:radial-gradient(closest-side, var(--accent-soft), transparent); filter:blur(8px); }
+.hero h1 { font-size:32px; line-height:1.2; margin:0 0 8px; letter-spacing:-.02em; }
+.hero h1 span { color:var(--link); }
+.hero p { margin:0 0 12px; color:var(--muted); font-size:16px; }
+.badges { display:flex; flex-wrap:wrap; gap:6px 16px; margin:0 0 20px; padding:0; list-style:none; font-size:13px; color:var(--muted); }
+.badges li { display:inline-flex; align-items:center; gap:5px; }
+.badges .ic { width:15px; height:15px; color:var(--ok); }
+/* 搜索 */
 .search { position:relative; max-width:560px; }
-.search > .ic { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
-.search input { width:100%; height:46px; padding:0 44px 0 40px; font-size:16px; border-radius:12px; box-shadow:var(--shadow); }
-.search .kbd { position:absolute; right:12px; top:50%; transform:translateY(-50%); }
-.search input:focus + .kbd, .search input:not(:placeholder-shown) + .kbd { display:none; }
-.tools { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; margin-top:8px; }
-a.tool { position:relative; display:flex; flex-direction:column; gap:10px; padding:18px; background:var(--surface); border:1px solid var(--border);
-  border-radius:14px; color:inherit; text-decoration:none; box-shadow:var(--shadow); transition:border-color .15s, transform .15s, box-shadow .15s; }
-a.tool:hover, a.tool:focus-visible, a.tool.first { border-color:var(--accent); box-shadow:var(--shadow-lg); transform:translateY(-2px); outline:none; }
-.tool .ico { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; background:var(--accent-soft); color:var(--link); }
+.search > .ic { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; transition:color .15s; }
+.search:focus-within > .ic { color:var(--link); }
+.search input { width:100%; height:48px; padding:0 84px 0 42px; font-size:16px; border-radius:12px; box-shadow:var(--shadow); }
+.search input::-webkit-search-cancel-button { -webkit-appearance:none; appearance:none; }
+.search .kbd { position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; }
+.search input:focus ~ .kbd, .search input:not(:placeholder-shown) ~ .kbd { display:none; }
+.search .clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); width:32px; height:32px; display:grid; place-items:center;
+  border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; }
+.search .clear:hover { background:var(--surface-2); color:var(--text); }
+.search .clear .ic { width:16px; height:16px; }
+.search .count { position:absolute; right:44px; top:50%; transform:translateY(-50%); font-size:12.5px; color:var(--muted); pointer-events:none; white-space:nowrap; }
+/* 最近使用 */
+.recent { display:flex; align-items:center; gap:8px; margin-top:12px; max-width:100%; overflow-x:auto; scrollbar-width:none; }
+.recent::-webkit-scrollbar { display:none; }
+.recent-label { font-size:12.5px; color:var(--muted); white-space:nowrap; margin-right:2px; }
+.chip { display:inline-flex; align-items:center; gap:7px; flex:none; height:32px; padding:0 12px 0 5px; border:1px solid var(--border); border-radius:999px;
+  background:var(--surface); color:var(--text); text-decoration:none; font-size:13.5px; white-space:nowrap; box-shadow:var(--shadow); transition:border-color .15s, background .15s; }
+.chip > span:first-child { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--tint-soft); color:var(--tint); }
+.chip .ic { width:13px; height:13px; }
+.chip:hover { border-color:var(--tint); }
+.recent-clear { flex:none; height:28px; padding:0 8px; border:0; background:transparent; color:var(--muted); font:inherit; font-size:12.5px; border-radius:6px; cursor:pointer; }
+.recent-clear:hover { color:var(--text); background:var(--surface-2); }
+/* 卡片 */
+.tools { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px; margin-top:8px; }
+a.tool { position:relative; display:flex; flex-direction:column; gap:12px; padding:18px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; color:inherit; text-decoration:none; box-shadow:var(--shadow); -webkit-tap-highlight-color:transparent;
+  transition:border-color .2s, transform .2s, box-shadow .2s; animation:card-in .4s cubic-bezier(.2,.7,.3,1) backwards; animation-delay:calc(var(--i, 0) * 35ms); }
+@keyframes card-in { from { opacity:0; transform:translateY(8px); } }
+.loaded a.tool { animation:none; } /* 入场动画只在首次加载时播放，筛选时不重播 */
+.tool .ico { width:42px; height:42px; flex:none; border-radius:11px; display:grid; place-items:center; background:var(--tint-soft); color:var(--tint);
+  transition:transform .2s; }
 .tool .ico .ic { width:22px; height:22px; }
+.tool .txt { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .tool .name { font-weight:600; font-size:16px; }
-.tool .desc { color:var(--muted); font-size:13px; line-height:1.5; }
-.tool .go { position:absolute; top:20px; right:18px; color:var(--muted); opacity:0; transition:.15s; }
-a.tool:hover .go, a.tool.first .go { opacity:1; color:var(--link); transform:translateX(2px); }
-.sec { display:flex; align-items:baseline; gap:10px; margin:28px 0 12px; font-size:18px; letter-spacing:-.01em; }
-.sec small { font-size:13px; font-weight:400; color:var(--muted); }
+.tool .desc { color:var(--muted); font-size:13px; line-height:1.55; }
+.tool mark { background:var(--warn-soft); color:inherit; border-radius:3px; padding:0 1px; box-shadow:0 1px 0 var(--warn); }
+.tool .go { position:absolute; top:21px; right:18px; color:var(--tint); opacity:0; transition:opacity .2s, transform .2s; }
+a.tool:focus-visible { outline:2px solid var(--tint); outline-offset:2px; }
+a.tool.sel { border-color:var(--tint); box-shadow:0 0 0 3px var(--tint-soft), var(--shadow); }
+a.tool.sel .go { opacity:1; transform:translateX(2px); }
+a.tool:active { transform:scale(.985); }
+@media (hover:hover) {
+  a.tool:hover { border-color:var(--border-strong); border-color:color-mix(in srgb, var(--tint) 50%, var(--border)); transform:translateY(-3px);
+    box-shadow:0 10px 24px -12px var(--tint), var(--shadow); }
+  a.tool:hover .ico { transform:scale(1.07) rotate(-3deg); }
+  a.tool:hover .go { opacity:1; transform:translateX(2px); }
+}
+.sec { display:flex; align-items:center; gap:8px; margin:30px 0 12px; font-size:18px; letter-spacing:-.01em; }
+.sec .num { min-width:22px; height:20px; padding:0 6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
+  font-size:12px; font-weight:600; color:var(--muted); display:inline-grid; place-items:center; font-variant-numeric:tabular-nums; }
+.sec small { font-size:13px; font-weight:400; color:var(--muted); margin-left:2px; }
 .sec:first-of-type { margin-top:8px; }
-.empty { text-align:center; color:var(--muted); padding:40px 0; }
-.today { display:grid; grid-template-columns:1.05fr 1fr 1.3fr 1fr 1.2fr; gap:1px; margin-top:18px; background:var(--border);
+/* 只有一个游戏时：横幅卡片 */
+.tools.solo > a.tool { grid-column:1 / -1; min-height:150px; justify-content:center; overflow:hidden; padding-right:46%; }
+.tools.solo .art { position:absolute; right:0; top:0; bottom:0; width:58%; color:var(--tint); pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg, transparent, #000 38%); mask-image:linear-gradient(90deg, transparent, #000 38%); }
+.tools.solo .art svg { width:100%; height:100%; display:block; }
+.tools.solo .kart { transition:transform .5s cubic-bezier(.2,.7,.3,1); }
+@media (hover:hover) { .tools.solo a.tool:hover .kart { transform:translateX(-26px); } }
+.play { display:inline-flex; align-items:center; gap:6px; align-self:flex-start; margin-top:2px; height:30px; padding:0 12px; border-radius:8px;
+  background:var(--tint); color:var(--surface); font-size:13px; font-weight:600; }
+.play .ic { width:14px; height:14px; }
+.empty { text-align:center; color:var(--muted); padding:44px 0 28px; }
+.empty .ic { width:36px; height:36px; opacity:.5; margin-bottom:6px; }
+.empty p { margin:0 0 12px; }
+.today { display:grid; grid-template-columns:1.25fr 1fr 1.3fr 1fr 1.2fr; gap:1px; margin-top:18px; background:var(--border);
   border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); animation:td-in .35s ease-out; }
 @keyframes td-in { from { opacity:0; transform:translateY(4px); } }
 .td { display:flex; flex-direction:column; gap:3px; min-width:0; padding:14px 18px 15px; background:var(--surface); text-align:left; }
@@ -208,18 +273,64 @@ a.tool:hover .go, a.tool.first .go { opacity:1; color:var(--link); transform:tra
 .td-snap:hover { color:var(--link); border-color:var(--accent); background:var(--accent-soft); }
 .td-snap:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .td-snap[aria-busy=true] { opacity:.6; pointer-events:none; }
-@media (min-width:761px) { .td-snap { width:28px; padding:0; justify-content:center; } .td-snap span { display:none; } }
+.td-bar.hours { gap:2px; }
+.td-bar.span > i { position:relative; overflow:hidden; }
+.td-bar.span > i > b { position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:3px; }
+.td-ts .live { width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 0 var(--ok); animation:live 2s infinite; }
+@keyframes live { 70% { box-shadow:0 0 0 5px transparent; } 100% { box-shadow:0 0 0 0 transparent; } }
+.td-ts .td-copy { margin-top:auto; font-size:12px; color:var(--link); opacity:0; transition:opacity .15s; }
+.td-ts:hover .td-copy, .td-ts:focus-visible .td-copy { opacity:1; }
+@media (min-width:761px) {
+  .td-snap { padding:0 8px; } .td-snap span { display:none; }
+  .td-date:hover .td-snap span, .td-snap:focus-visible span { display:inline; }
+  .td-date:hover .td-snap { color:var(--link); border-color:var(--accent); background:var(--accent-soft); }
+}
 @media (max-width:760px) {
   .today { grid-template-columns:1fr 1fr; }
   .td-date { grid-column:1 / -1; flex-direction:row; flex-wrap:wrap; align-items:baseline; column-gap:12px; }
   .td-date .td-label { width:100%; }
+  .td-date .td-bar, .td-date .td-gap { display:none; }
   .td { padding:12px 14px 13px; }
   .td-main em { font-size:22px; }
   .td-ts .td-main { font-size:17px; }
+  .td-ts .td-copy { display:none; }
 }
-footer { margin-top:40px; text-align:center; color:var(--muted); font-size:13px; }
+/* 手机：今日概览改为可横向滑动的一条，节省首屏空间 */
+@media (max-width:640px) {
+  .today { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); }
+  .today::-webkit-scrollbar { display:none; }
+  .today > .td { flex:0 0 auto; width:42%; min-width:148px; scroll-snap-align:start; padding:11px 13px 12px; }
+  .today > .td-date { width:62%; min-width:214px; flex-direction:column; flex-wrap:nowrap; }
+  .td-date .td-sub { white-space:nowrap; }
+  .today .td-gap { height:6px; }
+  .td-snap { height:26px; padding:0 8px; }
+}
+footer { margin-top:48px; padding-top:20px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 20px;
+  color:var(--muted); font-size:13px; }
 footer a { color:inherit; }
-@media (max-width:640px) { .hero { padding:12px 0 16px; } .hero h1 { font-size:25px; } .hero p { font-size:15px; } .search .kbd { display:none; } }
+footer a:hover { color:var(--link); }
+footer .keys { display:flex; flex-wrap:wrap; gap:4px 14px; }
+footer .keys .kbd { margin-right:4px; }
+@media (hover:none), (max-width:640px) { footer .keys { display:none; } footer { justify-content:center; } }
+.gh .ic { width:19px; height:19px; }
+@media (max-width:640px) {
+  .hero { padding:14px 0 16px; } .hero h1 { font-size:26px; } .hero p { font-size:15px; margin-bottom:10px; }
+  .badges { gap:4px 12px; margin-bottom:16px; font-size:12.5px; }
+  .search .kbd { display:none; }
+  .tools { gap:10px; grid-template-columns:minmax(0,1fr); }
+  a.tool { flex-direction:row; align-items:center; gap:14px; padding:13px 38px 13px 13px; }
+  .tool .ico { width:40px; height:40px; }
+  .tool .txt { gap:1px; }
+  .tool .name { font-size:15.5px; }
+  .tool .desc { font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tool .go { top:50%; right:13px; margin-top:-9px; opacity:.45; }
+  .tools.solo > a.tool { min-height:128px; padding-right:40%; flex-direction:column; align-items:flex-start; justify-content:center; gap:10px; }
+  .tools.solo .tool .desc { white-space:normal; }
+  .tools.solo .art { width:52%; opacity:.75; }
+  .tools.solo .go { display:none; }
+  .sec { margin-top:26px; }
+}
 </style>
 <script>
 /* @shared-js:start */
@@ -262,14 +373,14 @@ const TB = (() => {
     auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
   };
   const TOOLS = [
-    { id: "qrcode", name: "文本转二维码", short: "二维码", icon: I.qrcode, desc: "支持中文与 emoji，可调纠错、尺寸与颜色，导出 PNG / SVG", keys: "二维码 qr qrcode 文本 链接 生成" },
-    { id: "json", name: "JSON 格式化", short: "JSON", icon: I.json, desc: "美化、压缩、转义，实时校验并定位错误行列", keys: "json 格式化 校验 压缩 美化 转义" },
-    { id: "base64-url", name: "Base64 / URL 编解码", short: "编解码", icon: I.codec, desc: "实时转换，UTF-8 安全，支持 URL-safe、文件与二进制结果", keys: "base64 url 编码 解码 encode decode" },
-    { id: "timestamp", name: "时间戳转换", short: "时间戳", icon: I.clock, desc: "时间戳与日期互转，自动识别秒 / 毫秒 / 微秒", keys: "时间戳 timestamp unix 日期 时间 时区" },
-    { id: "hash", name: "哈希计算", short: "哈希", icon: I.hash, desc: "MD5、SHA-1 / 256 / 384 / 512，支持文本和文件，可比对校验值", keys: "哈希 hash md5 sha sha1 sha256 校验 摘要 文件" },
-    { id: "password", name: "随机密码", short: "密码", icon: I.lock, desc: "加密安全的随机密码，强度提示，可批量生成", keys: "密码 password 随机 生成 强度" },
-    { id: "color", name: "颜色转换 / 取色", short: "颜色", icon: I.droplet, desc: "HEX / RGB / HSL / CMYK 互转，屏幕与图片取色，对比度检查", keys: "颜色 color 取色 吸管 hex rgb hsl cmyk 对比度 配色" },
-    { id: "image-base64", name: "图片转 Base64", short: "图片 Base64", icon: I.image, desc: "图片与 Data URI 互转，可压缩、转格式、缩放", keys: "图片 image base64 data uri 压缩 转换 图片转" },
+    { id: "qrcode", name: "文本转二维码", short: "二维码", icon: I.qrcode, desc: "支持中文与 emoji，可调纠错、尺寸与颜色，导出 PNG / SVG", keys: "二维码 qr qrcode 文本 链接 生成 erweima ewm", hue: 260 },
+    { id: "json", name: "JSON 格式化", short: "JSON", icon: I.json, desc: "美化、压缩、转义，实时校验并定位错误行列", keys: "json 格式化 校验 压缩 美化 转义 geshihua gsh", hue: 55 },
+    { id: "base64-url", name: "Base64 / URL 编解码", short: "编解码", icon: I.codec, desc: "实时转换，UTF-8 安全，支持 URL-safe、文件与二进制结果", keys: "base64 url 编码 解码 encode decode bianma jiema bjm", hue: 195 },
+    { id: "timestamp", name: "时间戳转换", short: "时间戳", icon: I.clock, desc: "时间戳与日期互转，自动识别秒 / 毫秒 / 微秒", keys: "时间戳 timestamp unix 日期 时间 时区 shijianchuo sjc", hue: 290 },
+    { id: "hash", name: "哈希计算", short: "哈希", icon: I.hash, desc: "MD5、SHA-1 / 256 / 384 / 512，支持文本和文件，可比对校验值", keys: "哈希 hash md5 sha sha1 sha256 校验 摘要 文件 haxi hx jiaoyan", hue: 330 },
+    { id: "password", name: "随机密码", short: "密码", icon: I.lock, desc: "加密安全的随机密码，强度提示，可批量生成", keys: "密码 password 随机 生成 强度 mima mm suiji", hue: 150 },
+    { id: "color", name: "颜色转换 / 取色", short: "颜色", icon: I.droplet, desc: "HEX / RGB / HSL / CMYK 互转，屏幕与图片取色，对比度检查", keys: "颜色 color 取色 吸管 hex rgb hsl cmyk 对比度 配色 yanse ys quse", hue: 15 },
+    { id: "image-base64", name: "图片转 Base64", short: "图片 Base64", icon: I.image, desc: "图片与 Data URI 互转，可压缩、转格式、缩放", keys: "图片 image base64 data uri 压缩 转换 图片转 tupian tp", hue: 85 },
   ].map(t => ({ ...t, href: `tools/${t.id}.html` }));
 
   const svg = (p, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -366,6 +477,8 @@ const TB = (() => {
     const l = document.createElement("link"); l.rel = "icon"; l.href = "data:image/svg+xml," + encodeURIComponent(s); document.head.appendChild(l);
   }
   favicon();
+  // 记录最近使用的工具，首页据此显示「最近使用」
+  if (root.dataset.tool) { const r = store.get("recent", []); store.set("recent", [root.dataset.tool, ...(Array.isArray(r) ? r : []).filter(x => x !== root.dataset.tool)].slice(0, 6)); }
   document.addEventListener("DOMContentLoaded", () => {
     buildHeader();
     const af = document.querySelector("[data-autofocus]");
@@ -381,53 +494,147 @@ const TB = (() => {
 <header id="tb-header" class="topbar"></header>
 <main class="container">
   <section class="hero">
-    <h1>在线工具集</h1>
-    <p>常用的开发与日常小工具，全部在浏览器本地运行，不联网、不上传任何数据。</p>
+    <h1>在线<span>工具集</span></h1>
+    <p>常用的开发与日常小工具，打开即用，数据只留在你的浏览器里。</p>
+    <ul class="badges" aria-label="特点"><li>全部本地运行</li><li>不联网、不上传</li><li>无广告、无追踪</li><li>开源免费</li></ul>
     <div class="search" role="search">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" id="q" placeholder="搜索，如：二维码、json、md5、游戏" aria-label="搜索工具或游戏" autocomplete="off" data-autofocus>
+      <input type="search" id="q" placeholder="搜索，如：二维码、json、md5、游戏" aria-label="搜索工具或游戏" aria-describedby="q-count" autocomplete="off" spellcheck="false" enterkeyhint="go" data-autofocus>
+      <span class="count" id="q-count" role="status" aria-live="polite"></span>
+      <button type="button" class="clear" id="q-clear" aria-label="清空搜索" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <span class="kbd" aria-hidden="true">/</span>
     </div>
+    <nav class="recent" id="recent" aria-label="最近使用" hidden></nav>
     <div class="today" id="today" role="group" aria-label="今日概览" hidden></div>
   </section>
-  <h2 class="sec" id="h-tools">工具</h2>
+  <h2 class="sec" id="h-tools">工具 <span class="num" id="n-tools"></span></h2>
   <div class="tools" id="grid"></div>
-  <h2 class="sec" id="h-games">小游戏 <small>休息一下，同样纯本地运行</small></h2>
+  <h2 class="sec" id="h-games">小游戏 <span class="num" id="n-games"></span> <small>休息一下，同样纯本地运行</small></h2>
   <div class="tools" id="games"></div>
-  <p class="empty" id="empty" hidden>没有找到匹配的内容，换个关键词试试</p>
-  <footer>开源项目 · <a href="https://github.com/dujingning/toolbox">github.com/dujingning/toolbox</a></footer>
+  <div class="empty" id="empty" hidden>
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8.5 9.5h.01M13.5 9.5h.01M8.5 13.5c1.5-1.2 3.5-1.2 5 0"/></svg>
+    <p>没有找到「<span id="empty-q"></span>」相关的工具，换个关键词试试</p>
+    <button type="button" class="btn btn-sm" id="empty-clear">清空搜索</button>
+  </div>
+  <footer>
+    <span>MIT 开源 · <a href="https://github.com/dujingning/toolbox">github.com/dujingning/toolbox</a></span>
+    <span class="keys" aria-hidden="true"><span><span class="kbd">/</span>搜索</span><span><span class="kbd">↑</span><span class="kbd">↓</span>选择</span><span><span class="kbd">Enter</span>打开</span><span><span class="kbd">Esc</span>清空</span></span>
+  </footer>
 </main>
 <script>
-const grid = document.getElementById("grid"), q = document.getElementById("q");
-grid.innerHTML = TB.TOOLS.map(t => `<a class="tool" href="${t.href}" data-k="${TB.esc((t.name + " " + t.keys + " " + t.desc).toLowerCase())}">
-  <span class="ico">${TB.svg(t.icon)}</span><span class="name">${TB.esc(t.name)}</span><span class="desc">${TB.esc(t.desc)}</span>${TB.svg(TB.I.arrow, "ic go")}</a>`).join("");
+const $ = id => document.getElementById(id);
+const grid = $("grid"), gameGrid = $("games"), q = $("q"), recentEl = $("recent");
 const GAMES = [
-  { href: "games/wall-rush.html", name: "城墙飞驰", desc: "古城墙顶上的 3D 卡丁车漂移竞速，3 圈 5 名对手，支持键盘与触屏", keys: "游戏 game 赛车 卡丁车 漂移 竞速 城墙 飞驰 3d",
+  { id: "wall-rush", href: "games/wall-rush.html", name: "城墙飞驰", short: "城墙飞驰", hue: 40, art: "wall",
+    desc: "古城墙顶上的 3D 卡丁车漂移竞速，3 圈 5 名对手，支持键盘与触屏",
+    keys: "游戏 game 赛车 卡丁车 漂移 竞速 城墙 飞驰 3d youxi saiche chengqiang feichi cqfc",
     icon: '<rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 10v4M5 12h4M15.5 11h.01M18 13h.01"/>' },
 ];
-const gameGrid = document.getElementById("games");
-gameGrid.innerHTML = GAMES.map(t => `<a class="tool" href="${t.href}" data-k="${TB.esc((t.name + " " + t.keys + " " + t.desc).toLowerCase())}">
-  <span class="ico">${TB.svg(t.icon)}</span><span class="name">${TB.esc(t.name)}</span><span class="desc">${TB.esc(t.desc)}</span>${TB.svg(TB.I.arrow, "ic go")}</a>`).join("");
-const cards = [...grid.children, ...gameGrid.children];
-
-function filter() {
-  const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  let shown = 0;
-  cards.forEach(c => {
-    const hit = words.every(w => c.dataset.k.includes(w));
-    c.hidden = !hit; c.classList.remove("first");
-    if (hit && !shown++ && words.length) c.classList.add("first"); // 回车会打开第一个结果
-  });
-  [[grid, "h-tools"], [gameGrid, "h-games"]].forEach(([g, h]) => { document.getElementById(h).hidden = ![...g.children].some(c => !c.hidden); });
-  document.getElementById("empty").hidden = shown > 0;
+const ALL = [...TB.TOOLS, ...GAMES];
+// 城墙飞驰横幅插画：远山、城墙垛口、城楼、卡丁车。颜色取卡片的 --tint，随主题变化
+function wallArt() {
+  let merlons = "";
+  for (let x = 0; x < 400; x += 18) merlons += `<rect x="${x}" y="98" width="11" height="9" rx="1"/>`;
+  return `<span class="art" aria-hidden="true"><svg viewBox="0 0 400 150" preserveAspectRatio="xMaxYMax slice" fill="currentColor">
+    <circle cx="330" cy="64" r="20" opacity=".2"/><circle cx="330" cy="64" r="31" opacity=".07"/>
+    <path d="M0 108 Q50 74 104 94 T214 82 T318 90 T400 76 V150 H0Z" opacity=".09"/>
+    <g opacity=".3"><path d="M236 68h64v38h-64z"/><path d="M224 70 268 48l44 22z"/><path d="M231 50h74l-8-6h-58z" opacity=".8"/><path d="M262 38h12v8h-12z"/></g>
+    <g opacity=".22">${merlons}<path d="M0 106h400v44H0z"/></g>
+    <path d="M250 150v-22a18 18 0 0 1 36 0v22z" style="fill:var(--surface)" opacity=".7"/>
+    <path d="M0 124h400M0 139h400" stroke="currentColor" stroke-width="1" opacity=".14"/>
+    <g class="kart">
+      <path d="M74 90h30M60 97h38M82 83h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>
+      <path d="M110 98c0-6 4-9 10-10l8-7h14l6 7h8c5 0 7 4 7 10z"/>
+      <circle cx="137" cy="78" r="6"/>
+      <circle cx="120" cy="100" r="6" style="fill:var(--text)"/><circle cx="153" cy="100" r="6" style="fill:var(--text)"/>
+      <circle cx="120" cy="100" r="2.2" style="fill:var(--surface)"/><circle cx="153" cy="100" r="2.2" style="fill:var(--surface)"/>
+    </g></svg></span>`;
 }
+const card = (t, i) => `<a class="tool tint" href="${t.href}" data-id="${t.id}" style="--h:${t.hue ?? 260};--i:${i}" data-k="${TB.esc((t.name + " " + t.keys + " " + t.desc).toLowerCase())}">
+  ${t.art === "wall" ? wallArt() : ""}<span class="ico">${TB.svg(t.icon)}</span><span class="txt"><span class="name">${TB.esc(t.name)}</span><span class="desc">${TB.esc(t.desc)}</span></span>
+  ${t.art ? `<span class="play">开始游戏${TB.svg(TB.I.arrow)}</span>` : ""}${TB.svg(TB.I.arrow, "ic go")}</a>`;
+grid.innerHTML = TB.TOOLS.map(card).join("");
+gameGrid.innerHTML = GAMES.map((t, i) => card(t, TB.TOOLS.length + i)).join("");
+gameGrid.classList.toggle("solo", GAMES.length === 1);
+const cards = [...grid.children, ...gameGrid.children];
+const byId = Object.fromEntries(ALL.map(t => [t.id, t]));
+document.querySelectorAll(".badges li").forEach(li => li.insertAdjacentHTML("afterbegin", TB.svg(TB.I.check)));
+
+// 搜索：多关键词（空格分隔）同时匹配，命中文字高亮；↑↓ 选择、回车打开
+function mark(text, words) {
+  if (!words.length) return TB.esc(text);
+  const low = text.toLowerCase(), on = new Array(text.length).fill(false);
+  words.forEach(w => { for (let i = low.indexOf(w); i !== -1; i = low.indexOf(w, i + w.length)) on.fill(true, i, i + w.length); });
+  let out = "", open = false;
+  for (let i = 0; i < text.length; i++) { if (on[i] !== open) { out += on[i] ? "<mark>" : "</mark>"; open = on[i]; } out += TB.esc(text[i]); }
+  return out + (open ? "</mark>" : "");
+}
+let sel = -1;
+const visible = () => cards.filter(c => !c.hidden);
+function select(i, scroll) {
+  const v = visible(); sel = v.length ? Math.max(-1, Math.min(i, v.length - 1)) : -1;
+  cards.forEach(c => c.classList.remove("sel"));
+  if (sel >= 0) { v[sel].classList.add("sel"); if (scroll) v[sel].scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+}
+function filter() {
+  const raw = q.value.trim(), words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+  cards.forEach(c => {
+    const t = byId[c.dataset.id];
+    c.hidden = !words.every(w => c.dataset.k.includes(w));
+    c.querySelector(".name").innerHTML = mark(t.name, words);
+    c.querySelector(".desc").innerHTML = mark(t.desc, words);
+  });
+  const n = [[grid, "h-tools", "n-tools"], [gameGrid, "h-games", "n-games"]].reduce((sum, [g, h, num]) => {
+    const k = [...g.children].filter(c => !c.hidden).length;
+    $(h).hidden = !k; $(num).textContent = k; return sum + k;
+  }, 0);
+  $("empty").hidden = n > 0; $("empty-q").textContent = raw;
+  $("q-count").textContent = words.length && n ? `${n} 个结果` : "";
+  $("q-clear").hidden = !q.value;
+  recentEl.hidden = !!words.length || !recentEl.childElementCount;
+  select(words.length ? 0 : -1); // 有关键词时默认选中第一个，回车直接打开
+}
+function clearSearch() { q.value = ""; filter(); q.focus(); }
 q.addEventListener("input", filter);
 q.addEventListener("keydown", e => {
-  if (e.key === "Enter") { const f = cards.find(c => !c.hidden); if (f) location.href = f.href; }
-  if (e.key === "Escape") { q.value = ""; filter(); }
+  if (e.isComposing) return; // 中文输入法选词时的回车不触发
+  if (e.key === "ArrowDown") { e.preventDefault(); select(sel + 1, true); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); select(Math.max(0, sel - 1), true); }
+  else if (e.key === "Enter") { const v = visible(), c = v[sel] || (q.value.trim() && v[0]); if (c) { e.preventDefault(); c.click(); } }
+  else if (e.key === "Escape") { if (q.value) clearSearch(); else q.blur(); }
 });
+q.addEventListener("blur", () => { if (!q.value.trim()) select(-1); });
+$("q-clear").onclick = clearSearch;
+$("empty-clear").onclick = clearSearch;
 document.addEventListener("keydown", e => {
-  if (e.key === "/" && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) { e.preventDefault(); q.focus(); q.select(); }
+});
+// 窄屏用短一点的提示语，避免被截断
+const narrow = matchMedia("(max-width: 640px)");
+const setPh = () => { q.placeholder = narrow.matches ? "搜索工具，如 json、md5" : "搜索，如：二维码、json、md5、游戏"; };
+setPh(); narrow.addEventListener?.("change", setPh);
+
+// 最近使用：工具页打开时由公共脚本记录，游戏在首页点击时记录
+function remember(id) { const r = TB.store.get("recent", []); TB.store.set("recent", [id, ...(Array.isArray(r) ? r : []).filter(x => x !== id)].slice(0, 6)); }
+function renderRecent() {
+  const r = TB.store.get("recent", []), list = (Array.isArray(r) ? r : []).map(id => byId[id]).filter(Boolean).slice(0, 4);
+  recentEl.innerHTML = !list.length ? "" : `<span class="recent-label">最近使用</span>${list.map(t =>
+    `<a class="chip tint" href="${t.href}" data-id="${t.id}" style="--h:${t.hue ?? 260}"><span>${TB.svg(t.icon)}</span>${TB.esc(t.short || t.name)}</a>`).join("")}<button type="button" class="recent-clear" title="清除最近使用记录">清除</button>`;
+  recentEl.hidden = !list.length || !!q.value.trim();
+  const b = recentEl.querySelector(".recent-clear");
+  if (b) b.onclick = () => { TB.store.set("recent", []); renderRecent(); TB.toast("已清除最近使用记录"); };
+}
+document.addEventListener("click", e => { const a = e.target.closest("a[data-id]"); if (a) remember(a.dataset.id); });
+addEventListener("pageshow", e => { if (e.persisted) renderRecent(); }); // 从工具页返回时刷新
+renderRecent();
+filter();
+setTimeout(() => document.body.classList.add("loaded"), 900);
+
+// 首页顶栏补一个 GitHub 链接（顶栏由公共脚本在 DOMContentLoaded 时生成）
+document.addEventListener("DOMContentLoaded", () => {
+  const theme = $("tb-theme"); if (!theme) return;
+  theme.insertAdjacentHTML("beforebegin", `<a class="btn btn-ghost btn-icon gh" href="https://github.com/dujingning/toolbox" title="GitHub 源码" aria-label="GitHub 源码">${TB.svg('<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>')}</a>`);
 });
 // 今日概览：日期 / 农历、ISO 周、年进度、最近节日、Unix 时间戳。全部本地计算
 (() => {
@@ -510,6 +717,11 @@ document.addEventListener("keydown", e => {
     for (let i = 0; i < 400; i++) { const d = addDays(today, i), f = festival(d); if (f) return { name: f[0], emoji: hasEmoji ? f[1] : "", date: d, days: i }; }
     return null;
   }
+  // 上一个节日距今的天数，用于画倒计时进度条
+  function lastFestivalGap(today) {
+    for (let i = 1; i < 400; i++) if (festival(addDays(today, -i))) return i;
+    return 0;
+  }
   const tz = (() => {
     const o = -new Date().getTimezoneOffset(), a = Math.abs(o);
     const off = `UTC${o >= 0 ? "+" : "−"}${String(a / 60 | 0).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`;
@@ -522,7 +734,7 @@ document.addEventListener("keydown", e => {
     pie: '<path d="M12 3v9l6.4 6.4A9 9 0 1 1 12 3z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
     gift: '<rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8S10.5 3 8 4s0 4 4 4zm0 0s1.5-5 4-4 0 4-4 4z"/>',
   };
-  let key = 0, yStart = 0, yLen = 1, yFill, yPct, tsEl, info;
+  let key = 0, yStart = 0, yLen = 1, yFill, yPct, tsEl, hFill, info;
   function render() {
     const now = new Date(), today = addDays(now, 0), y = now.getFullYear();
     key = ymd(now);
@@ -534,16 +746,19 @@ document.addEventListener("keydown", e => {
     const zodiac = l && ZODIAC[l.year.slice(-1)];
     info = { y, w, range, doy, total, l, zodiac, f };
     const days = [...Array(7)].map((_, i) => `<i class="${i + 1 < wd ? "past" : i + 1 === wd ? "now" : ""}" title="周${WK[(i + 1) % 7]}"></i>`).join("");
+    const hrs = now.getHours(), hours = [...Array(24)].map((_, h) => `<i class="${h < hrs ? "past" : ""}"${h === hrs ? "><b></b></i>" : "></i>"}`).join("");
+    const gap = f && f.days ? lastFestivalGap(today) : 0, fp = gap ? gap / (gap + f.days) * 100 : 0;
     const months = [...Array(12)].map((_, m) => `<i class="${m < now.getMonth() ? "past" : ""}"${m === now.getMonth() ? "><b></b></i>" : "></i>"}`).join("");
     const fest = !f ? "" : f.days === 0
       ? `<div class="td td-fest"><span class="td-label">${TB.svg(I.gift)}今天是</span><span class="td-main"><em>${f.name}</em> ${f.emoji}</span><span class="td-sub">节日快乐</span></div>`
-      : `<div class="td td-fest" title="${f.date.getFullYear()}年${md(f.date)}"><span class="td-label">${TB.svg(I.gift)}距${f.name}</span><span class="td-main"><em>${f.days}</em> 天</span><span class="td-sub">${md(f.date)} 周${WK[f.date.getDay()]}${f.days === 1 ? " · 明天" : ""}</span></div>`;
+      : `<div class="td td-fest" title="${f.date.getFullYear()}年${md(f.date)}"><span class="td-label">${TB.svg(I.gift)}距${f.name}</span><span class="td-main"><em>${f.days}</em> 天</span><span class="td-sub">${md(f.date)} 周${WK[f.date.getDay()]}${f.days === 1 ? " · 明天" : ""}</span>${gap ? `<span class="td-gap"></span><span class="td-bar span" title="距上个节日已过 ${gap} 天"><i><b style="width:${fp.toFixed(1)}%"></b></i></span>` : ""}</div>`;
     box.innerHTML = `
       <div class="td td-date" title="${y}年${md(now)}${l ? ` · 农历${l.year}年${zodiac ? `（${zodiac}年）` : ""}${l.text}` : ""}">
         <span class="td-label">${TB.svg(I.cal)}今天 · ${y}</span>
         <button type="button" class="td-snap" title="把今日概览生成为图片并复制">${TB.svg(TB.I.image)}<span>复制卡片</span></button>
         <span class="td-main"><em>${now.getMonth() + 1}</em>月<em>${now.getDate()}</em>日</span>
         <span class="td-sub">星期${WK[now.getDay()]}${l ? ` · 农历${l.text}` : ""}</span>
+        <span class="td-gap"></span><span class="td-bar hours span" title="今天的 24 小时">${hours}</span>
       </div>
       <div class="td" title="ISO 8601 周数：周一为一周开始，${w.year} 年第 ${w.week} 周">
         <span class="td-label">${TB.svg(I.week)}${w.year !== y ? w.year + " 年 · " : ""}本年第几周</span>
@@ -559,11 +774,12 @@ document.addEventListener("keydown", e => {
       </div>
       ${fest}
       <button type="button" class="td td-ts" title="点击复制（秒级）· 时区 ${TB.esc(tz)}" aria-label="复制当前 Unix 时间戳">
-        <span class="td-label">${TB.svg(TB.I.clock)}Unix 时间戳${TB.svg(TB.I.copy)}</span>
+        <span class="td-label">${TB.svg(TB.I.clock)}Unix 时间戳<span class="live" aria-hidden="true"></span>${TB.svg(TB.I.copy)}</span>
         <span class="td-main" id="tdTs"></span>
         <span class="td-sub">${TB.esc(tz)}</span>
+        <span class="td-copy">点击复制</span>
       </button>`;
-    yFill = box.querySelector(".td-bar.year b"); yPct = box.querySelector("#tdPct"); tsEl = box.querySelector("#tdTs");
+    yFill = box.querySelector(".td-bar.year b"); hFill = box.querySelector(".td-bar.hours b"); yPct = box.querySelector("#tdPct"); tsEl = box.querySelector("#tdTs");
     box.querySelector(".td-snap").onclick = snap;
     box.querySelector(".td-ts").onclick = () => { const s = String(Math.floor(Date.now() / 1000)); TB.copy(s, "已复制时间戳 " + s); };
     box.hidden = false;
@@ -576,6 +792,7 @@ document.addEventListener("keydown", e => {
     yPct.textContent = p.toFixed(1);
     const ms = new Date(now.getFullYear(), m, 1), me = new Date(now.getFullYear(), m + 1, 1);
     if (yFill) yFill.style.width = ((now - ms) / (me - ms) * 100).toFixed(1) + "%";
+    if (hFill) { if (now.getHours() !== +hFill.dataset.h && hFill.dataset.h) return render(); hFill.dataset.h = now.getHours(); hFill.style.width = (now.getMinutes() / 60 * 100).toFixed(1) + "%"; }
     tsEl.textContent = Math.floor(now / 1000);
   }
   // 分享卡片：Canvas 本地绘制一幅「山月日历」水墨画 → 复制为图片（不支持时下载 PNG）

@@ -58,7 +58,7 @@ python3 scripts/sync_shared.py --check  # 检查是否已同步（未同步时�
 ## 添加新工具
 
 1. 复制一个现有工具页（例如 `tools/password.html`）作为模板，修改 `<html>` 上的 `data-tool` 和页面内容。
-2. 在 `shared/base.js` 的 `TOOLS` 列表中加入新工具（名称、简称、图标、描述、搜索关键词）。首页卡片和顶部导航会自动更新。
+2. 在 `shared/base.js` 的 `TOOLS` 列表中加入新工具（名称、简称、图标、描述、搜索关键词、`hue` 色相）。`hue` 是 OKLCH 色相角（0–360），决定首页卡片的图标颜色，尽量和已有工具错开；关键词里可以加拼音和首字母，方便搜索。首页卡片和顶部导航会自动更新。
 3. 运行 `python3 scripts/sync_shared.py`。
 4. 在 `README.md` 的工具列表中补上一行。
 
