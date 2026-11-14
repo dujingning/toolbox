@@ -177,6 +177,46 @@ a.tool:hover .go, a.tool.first .go { opacity:1; color:var(--link); transform:tra
 .sec small { font-size:13px; font-weight:400; color:var(--muted); }
 .sec:first-of-type { margin-top:8px; }
 .empty { text-align:center; color:var(--muted); padding:40px 0; }
+.today { display:grid; grid-template-columns:1.05fr 1fr 1.3fr 1fr 1.2fr; gap:1px; margin-top:18px; background:var(--border);
+  border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); animation:td-in .35s ease-out; }
+@keyframes td-in { from { opacity:0; transform:translateY(4px); } }
+.td { display:flex; flex-direction:column; gap:3px; min-width:0; padding:14px 18px 15px; background:var(--surface); text-align:left; }
+.td-label { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+.td-label .ic { width:13px; height:13px; }
+.td-main { font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.25; }
+.td-main em { font-style:normal; font-size:24px; letter-spacing:-.02em; margin:0 1px; }
+.td-sub { font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.td-bar { display:flex; gap:3px; height:5px; margin-top:auto; padding-top:0; }
+.td-bar > i { flex:1; border-radius:3px; background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--border); }
+.td-bar > i.past { background:var(--accent); opacity:.35; box-shadow:none; }
+.td-bar > i.now { background:var(--accent); box-shadow:none; }
+.td-bar.year > i { position:relative; overflow:hidden; }
+.td-bar.year > i > b { position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:3px; }
+.td-gap { height:8px; }
+.td-ts { font:inherit; color:inherit; border:0; border-radius:0; cursor:pointer; align-items:stretch; transition:background .15s; }
+.td-ts:hover { background:var(--surface-2); }
+.td-ts:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.td-ts .td-main { font-family:var(--mono); font-size:20px; font-weight:600; letter-spacing:-.01em; padding:2px 0 1px; }
+.td-ts .td-label .ic:last-child { margin-left:auto; opacity:.6; transition:opacity .15s; }
+.td-ts:hover .td-label .ic:last-child { opacity:1; color:var(--link); }
+.td-fest .td-main em { color:var(--link); }
+.td-date { position:relative; }
+.td-snap { position:absolute; top:10px; right:10px; display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 10px;
+  font:inherit; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:8px; cursor:pointer;
+  transition:color .15s, border-color .15s, background .15s; }
+.td-snap .ic { width:14px; height:14px; }
+.td-snap:hover { color:var(--link); border-color:var(--accent); background:var(--accent-soft); }
+.td-snap:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.td-snap[aria-busy=true] { opacity:.6; pointer-events:none; }
+@media (min-width:761px) { .td-snap { width:28px; padding:0; justify-content:center; } .td-snap span { display:none; } }
+@media (max-width:760px) {
+  .today { grid-template-columns:1fr 1fr; }
+  .td-date { grid-column:1 / -1; flex-direction:row; flex-wrap:wrap; align-items:baseline; column-gap:12px; }
+  .td-date .td-label { width:100%; }
+  .td { padding:12px 14px 13px; }
+  .td-main em { font-size:22px; }
+  .td-ts .td-main { font-size:17px; }
+}
 footer { margin-top:40px; text-align:center; color:var(--muted); font-size:13px; }
 footer a { color:inherit; }
 @media (max-width:640px) { .hero { padding:12px 0 16px; } .hero h1 { font-size:25px; } .hero p { font-size:15px; } .search .kbd { display:none; } }
@@ -348,6 +388,7 @@ const TB = (() => {
       <input type="search" id="q" placeholder="搜索，如：二维码、json、md5、游戏" aria-label="搜索工具或游戏" autocomplete="off" data-autofocus>
       <span class="kbd" aria-hidden="true">/</span>
     </div>
+    <div class="today" id="today" role="group" aria-label="今日概览" hidden></div>
   </section>
   <h2 class="sec" id="h-tools">工具</h2>
   <div class="tools" id="grid"></div>
@@ -388,6 +429,411 @@ q.addEventListener("keydown", e => {
 document.addEventListener("keydown", e => {
   if (e.key === "/" && document.activeElement !== q) { e.preventDefault(); q.focus(); }
 });
+// 今日概览：日期 / 农历、ISO 周、年进度、最近节日、Unix 时间戳。全部本地计算
+(() => {
+  const box = document.getElementById("today"), DAY = 864e5, WK = "日一二三四五六";
+  const ymd = d => d.getFullYear() * 1e4 + (d.getMonth() + 1) * 100 + d.getDate();
+  const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  const md = d => `${d.getMonth() + 1}月${d.getDate()}日`;
+  // ISO 8601 周：周一开始，含当年第一个周四的那周为第 1 周
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    const y = t.getUTCFullYear();
+    return { year: y, week: Math.ceil(((t - Date.UTC(y, 0, 1)) / DAY + 1) / 7) };
+  }
+  // 农历（不支持中国历法的浏览器不显示）
+  let lunarFmt = null;
+  try {
+    lunarFmt = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" });
+    if (!lunarFmt.formatToParts(new Date()).some(p => p.type === "month" && /月$/.test(p.value))) lunarFmt = null;
+  } catch { lunarFmt = null; }
+  // 农历初一用天文算法定（Meeus 第 49 章朔时刻，北京时间），月份名再取浏览器内置中国历法。
+    // 内置历法（ICU）在朔接近午夜时会差一天，如 2027 年春节实为 2 月 6 日：第 k 次朔的时刻（返回 UTC 毫秒）
+  function newMoon(k) {
+    const T = k / 1236.85, r = Math.PI / 180, s = x => Math.sin(x * r);
+    const E = 1 - 0.002516 * T - 0.0000074 * T * T;
+    const M = 2.5534 + 29.1053567 * k - 0.0000014 * T * T;
+    const Mp = 201.5643 + 385.81693528 * k + 0.0107582 * T * T + 0.00001238 * T ** 3;
+    const F = 160.7108 + 390.67050284 * k - 0.0016118 * T * T - 0.00000227 * T ** 3;
+    const O = 124.7746 - 1.56375588 * k + 0.0020672 * T * T;
+    let jde = 2451550.09766 + 29.530588861 * k + 0.00015437 * T * T - 0.00000015 * T ** 3;
+    jde += -0.4072 * s(Mp) + 0.17241 * E * s(M) + 0.01608 * s(2 * Mp) + 0.01039 * s(2 * F) + 0.00739 * E * s(Mp - M)
+      - 0.00514 * E * s(Mp + M) + 0.00208 * E * E * s(2 * M) - 0.00111 * s(Mp - 2 * F) - 0.00057 * s(Mp + 2 * F)
+      + 0.00056 * E * s(2 * Mp + M) - 0.00042 * s(3 * Mp) + 0.00042 * E * s(M + 2 * F) + 0.00038 * E * s(M - 2 * F)
+      - 0.00024 * E * s(2 * Mp - M) - 0.00017 * s(O) - 0.00007 * s(Mp + 2 * M) + 0.00004 * s(2 * Mp - 2 * F)
+      + 0.00004 * s(3 * M) + 0.00003 * s(Mp + M - 2 * F) + 0.00003 * s(2 * Mp + 2 * F) - 0.00003 * s(Mp + M + 2 * F)
+      + 0.00003 * s(Mp - M + 2 * F) - 0.00002 * s(Mp - M - 2 * F) - 0.00002 * s(3 * Mp + M) + 0.00002 * s(4 * Mp)
+      + 0.000325 * s(299.77 + 0.107408 * k - 0.009173 * T * T);
+    return (jde - 2440587.5) * 864e5 - 70e3; // TT → UTC，ΔT 约 70 秒
+  }
+  // 北京时间的日序号（自 1970-01-01 起的天数）
+  const bjDay = ms => Math.floor((ms + 8 * 36e5) / 864e5);
+  // 给定本地日期 → 农历初一的日序号与日数
+  function lunarStart(y, m, d) {
+    const day = Math.floor(Date.UTC(y, m, d) / 864e5);
+    let k = Math.floor((day - 10962.6) / 29.530588861) + 1; // 2000-01-06 18:14 为 k=0
+    while (bjDay(newMoon(k)) > day) k--;
+    return { start: bjDay(newMoon(k)), day: day - bjDay(newMoon(k)) + 1 };
+  }
+  const CN = "一二三四五六七八九十";
+  const dayName = n => n <= 10 ? "初" + CN[n - 1] : n < 20 ? "十" + CN[n - 11] : n === 20 ? "二十" : n < 30 ? "廿" + CN[n - 21] : "三十";
+  const ZODIAC = { 子: "鼠", 丑: "牛", 寅: "虎", 卯: "兔", 辰: "龙", 巳: "蛇", 午: "马", 未: "羊", 申: "猴", 酉: "鸡", 戌: "狗", 亥: "猪" };
+  function lunar(d) {
+    if (!lunarFmt) return null;
+    const { start, day } = lunarStart(d.getFullYear(), d.getMonth(), d.getDate());
+    const p = {}; lunarFmt.formatToParts(new Date((start + 14) * DAY)).forEach(x => p[x.type] = x.value); // 取月中，避开边界误差
+    return { month: p.month, day, text: p.month + dayName(day), year: p.yearName || "" };
+  }
+  // 清明：21 世纪节气通式
+  const qingming = y => { const c = y % 100; return Math.floor(c * 0.2422 + 4.81) - Math.floor(c / 4); };
+  const FIXED = { 101: ["元旦", "🎉"], 501: ["劳动节", "🛠️"], 1001: ["国庆节", "🎆"] };
+  const LUNAR = { "正月1": ["春节", "🧧"], "五月5": ["端午节", "🐉"], "八月15": ["中秋节", "🥮"] };
+  function festival(d) {
+    const k = (d.getMonth() + 1) * 100 + d.getDate();
+    if (FIXED[k]) return FIXED[k];
+    if (d.getMonth() === 3 && d.getDate() === qingming(d.getFullYear())) return ["清明节", "🌿"];
+    const l = lunar(d);
+    return l && LUNAR[l.month + l.day] || null;
+  }
+  // 系统缺少彩色 emoji 字体时会显示方框，此时不显示 emoji
+  const hasEmoji = (() => {
+    try {
+      const c = document.createElement("canvas"); c.width = c.height = 24; const x = c.getContext("2d");
+      x.font = "20px sans-serif"; x.textBaseline = "top"; x.fillStyle = "#000"; x.fillText("🥮", 0, 0);
+      const d = x.getImageData(0, 0, 24, 24).data;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 3] && (d[i] !== d[i + 1] || d[i + 1] !== d[i + 2])) return true;
+    } catch {}
+    return false;
+  })();
+  function nextFestival(today) {
+    for (let i = 0; i < 400; i++) { const d = addDays(today, i), f = festival(d); if (f) return { name: f[0], emoji: hasEmoji ? f[1] : "", date: d, days: i }; }
+    return null;
+  }
+  const tz = (() => {
+    const o = -new Date().getTimezoneOffset(), a = Math.abs(o);
+    const off = `UTC${o >= 0 ? "+" : "−"}${String(a / 60 | 0).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`;
+    let name = ""; try { name = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch {}
+    return name ? `${off} · ${name}` : off;
+  })();
+  const I = {
+    cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    week: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+    pie: '<path d="M12 3v9l6.4 6.4A9 9 0 1 1 12 3z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
+    gift: '<rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8S10.5 3 8 4s0 4 4 4zm0 0s1.5-5 4-4 0 4-4 4z"/>',
+  };
+  let key = 0, yStart = 0, yLen = 1, yFill, yPct, tsEl, info;
+  function render() {
+    const now = new Date(), today = addDays(now, 0), y = now.getFullYear();
+    key = ymd(now);
+    yStart = new Date(y, 0, 1).getTime(); yLen = new Date(y + 1, 0, 1) - yStart;
+    const doy = Math.round((today - yStart) / DAY) + 1, total = Math.round(yLen / DAY);
+    const w = isoWeek(now), wd = now.getDay() || 7, mon = addDays(today, 1 - wd), sun = addDays(mon, 6);
+    const range = mon.getMonth() === sun.getMonth() ? `${md(mon)} – ${sun.getDate()}日` : `${md(mon)} – ${md(sun)}`;
+    const l = lunar(now), f = nextFestival(today);
+    const zodiac = l && ZODIAC[l.year.slice(-1)];
+    info = { y, w, range, doy, total, l, zodiac, f };
+    const days = [...Array(7)].map((_, i) => `<i class="${i + 1 < wd ? "past" : i + 1 === wd ? "now" : ""}" title="周${WK[(i + 1) % 7]}"></i>`).join("");
+    const months = [...Array(12)].map((_, m) => `<i class="${m < now.getMonth() ? "past" : ""}"${m === now.getMonth() ? "><b></b></i>" : "></i>"}`).join("");
+    const fest = !f ? "" : f.days === 0
+      ? `<div class="td td-fest"><span class="td-label">${TB.svg(I.gift)}今天是</span><span class="td-main"><em>${f.name}</em> ${f.emoji}</span><span class="td-sub">节日快乐</span></div>`
+      : `<div class="td td-fest" title="${f.date.getFullYear()}年${md(f.date)}"><span class="td-label">${TB.svg(I.gift)}距${f.name}</span><span class="td-main"><em>${f.days}</em> 天</span><span class="td-sub">${md(f.date)} 周${WK[f.date.getDay()]}${f.days === 1 ? " · 明天" : ""}</span></div>`;
+    box.innerHTML = `
+      <div class="td td-date" title="${y}年${md(now)}${l ? ` · 农历${l.year}年${zodiac ? `（${zodiac}年）` : ""}${l.text}` : ""}">
+        <span class="td-label">${TB.svg(I.cal)}今天 · ${y}</span>
+        <button type="button" class="td-snap" title="把今日概览生成为图片并复制">${TB.svg(TB.I.image)}<span>复制卡片</span></button>
+        <span class="td-main"><em>${now.getMonth() + 1}</em>月<em>${now.getDate()}</em>日</span>
+        <span class="td-sub">星期${WK[now.getDay()]}${l ? ` · 农历${l.text}` : ""}</span>
+      </div>
+      <div class="td" title="ISO 8601 周数：周一为一周开始，${w.year} 年第 ${w.week} 周">
+        <span class="td-label">${TB.svg(I.week)}${w.year !== y ? w.year + " 年 · " : ""}本年第几周</span>
+        <span class="td-main">第<em>${w.week}</em>周</span>
+        <span class="td-sub">${range}</span>
+        <span class="td-gap"></span><span class="td-bar">${days}</span>
+      </div>
+      <div class="td" title="${y} 年共 ${total} 天">
+        <span class="td-label">${TB.svg(I.pie)}${y} 年进度</span>
+        <span class="td-main"><em id="tdPct"></em>%</span>
+        <span class="td-sub">第 ${doy} 天 · 还剩 ${total - doy} 天</span>
+        <span class="td-gap"></span><span class="td-bar year">${months}</span>
+      </div>
+      ${fest}
+      <button type="button" class="td td-ts" title="点击复制（秒级）· 时区 ${TB.esc(tz)}" aria-label="复制当前 Unix 时间戳">
+        <span class="td-label">${TB.svg(TB.I.clock)}Unix 时间戳${TB.svg(TB.I.copy)}</span>
+        <span class="td-main" id="tdTs"></span>
+        <span class="td-sub">${TB.esc(tz)}</span>
+      </button>`;
+    yFill = box.querySelector(".td-bar.year b"); yPct = box.querySelector("#tdPct"); tsEl = box.querySelector("#tdTs");
+    box.querySelector(".td-snap").onclick = snap;
+    box.querySelector(".td-ts").onclick = () => { const s = String(Math.floor(Date.now() / 1000)); TB.copy(s, "已复制时间戳 " + s); };
+    box.hidden = false;
+    tick();
+  }
+  function tick() {
+    const now = new Date();
+    if (ymd(now) !== key) return render(); // 跨过零点自动刷新
+    const p = (now - yStart) / yLen * 100, m = now.getMonth();
+    yPct.textContent = p.toFixed(1);
+    const ms = new Date(now.getFullYear(), m, 1), me = new Date(now.getFullYear(), m + 1, 1);
+    if (yFill) yFill.style.width = ((now - ms) / (me - ms) * 100).toFixed(1) + "%";
+    tsEl.textContent = Math.floor(now / 1000);
+  }
+  // 分享卡片：Canvas 本地绘制一幅「山月日历」水墨画 → 复制为图片（不支持时下载 PNG）
+  // 山形以当天日期为随机种子（每天不同、当天稳定），山色随季节变化，月相按农历日期绘制
+  const cnNum = n => n <= 10 ? CN[n - 1] : n < 20 ? "十" + CN[n - 11] : CN[(n / 10 | 0) - 1] + "十" + (n % 10 ? CN[n % 10 - 1] : "");
+  const EN_MONTH = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+  const EN_WEEK = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+  const EN_ZODIAC = { 鼠: "RAT", 牛: "OX", 虎: "TIGER", 兔: "RABBIT", 龙: "DRAGON", 蛇: "SNAKE", 马: "HORSE", 羊: "GOAT", 猴: "MONKEY", 鸡: "ROOSTER", 狗: "DOG", 猪: "PIG" };
+  const SEAL = { 元旦: "元旦快乐", 春节: "新春大吉", 清明节: "清明安康", 劳动节: "劳动光荣", 端午节: "端午安康", 中秋节: "中秋佳节", 国庆节: "国庆快乐" };
+  const moonName = d => d === 1 ? "新月" : d < 7 ? "蛾眉月" : d < 9 ? "上弦月" : d < 15 ? "盈凸月" : d < 17 ? "满月" : d < 22 ? "亏凸月" : d < 24 ? "下弦月" : "残月";
+  // 冬、春、夏、秋：远山色、近山色、天色、飘落物
+  const SEASONS = [
+    { far: [170, 182, 194], near: [46, 56, 66], sky: [128, 150, 178], fall: "snow" },
+    { far: [152, 190, 172], near: [36, 64, 56], sky: [176, 206, 160], fall: "petal" },
+    { far: [126, 170, 182], near: [26, 56, 68], sky: [140, 194, 206], fall: "" },
+    { far: [208, 162, 122], near: [58, 40, 32], sky: [236, 172, 108], fall: "leaf" },
+  ];
+  function drawCard() {
+    const W = 900, H = 1300, S = 2, M = 80, F = 38, HB = 762, now = new Date(), PI = Math.PI;
+    const { y, w, range, doy, total, l, zodiac, f } = info;
+    const c = document.createElement("canvas"); c.width = W * S; c.height = H * S;
+    const x = c.getContext("2d"); x.scale(S, S); x.textBaseline = "alphabetic"; x.lineCap = "round";
+    const SERIF = '"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","Source Han Serif CN","Noto Serif SC","SimSun",serif';
+    const NUM = '"Didot","Bodoni 72","Times New Roman","Noto Serif",' + SERIF;
+    const MONO = getComputedStyle(document.documentElement).getPropertyValue("--mono") || "monospace";
+    const INK = "#2b2622", RED = "#c23b2c", PAPER = "#faf5ea", ink = a => `rgba(43,38,34,${a})`;
+    const mo = now.getMonth(), sea = SEASONS[Math.floor((mo + 1) % 12 / 3)];
+    let seed = key; // mulberry32
+    const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const rgba = (c3, a) => `rgba(${c3[0]},${c3[1]},${c3[2]},${a})`;
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const font = (wt, sz, fam = SERIF) => `${wt} ${sz}px ${fam}`;
+    const line = (x1, y1, x2, y2, col, lw = 1) => { x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.strokeStyle = col; x.lineWidth = lw; x.stroke(); };
+    const rr = (X, Y, w2, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w2, Y, X + w2, Y + h, r); x.arcTo(X + w2, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w2, Y, r); x.closePath(); };
+    // 单行文字，可设字距与对齐（不依赖 canvas letterSpacing，兼容旧浏览器）
+    const text = (t, X, Y, f2, col, align = "left", sp = 0) => {
+      x.font = f2; x.fillStyle = col;
+      const cs = [...t], ws = cs.map(ch => x.measureText(ch).width);
+      const tw = sp ? ws.reduce((a, b) => a + b, 0) + sp * (cs.length - 1) : x.measureText(t).width;
+      let px = align === "center" ? X - tw / 2 : align === "right" ? X - tw : X;
+      if (!sp) x.fillText(t, px, Y); else cs.forEach((ch, i) => { x.fillText(ch, px, Y); px += ws[i] + sp; });
+    };
+    // 多字号混排并整体居中（数字大、单位小）
+    const runs = (cx, Y, parts) => {
+      const ws = parts.map(([t, f2]) => { x.font = f2; return x.measureText(t).width; });
+      let px = cx - ws.reduce((a, b) => a + b, 0) / 2;
+      parts.forEach(([t, f2, col], i) => { x.font = f2; x.fillStyle = col; x.fillText(t, px, Y); px += ws[i]; });
+    };
+    // 竖排文字，返回底部 y
+    const vert = (t, cx, top, sz, step, col, wt = 600) => {
+      x.font = font(wt, sz); x.fillStyle = col; x.textAlign = "center";
+      [...t].forEach((ch, i) => x.fillText(ch, cx, top + sz * .88 + i * step)); x.textAlign = "left";
+      return top + (t.length - 1) * step + sz;
+    };
+
+    // ── 纸面 ──
+    const P0 = [243, 235, 219], P1 = [250, 245, 234], P2 = [239, 230, 211];
+    const paperAt = yy => { const t = yy / H; return t < .38 ? mix(P0, P1, t / .38) : mix(P1, P2, (t - .38) / .62); };
+    const bg = x.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, rgba(P0, 1)); bg.addColorStop(.38, rgba(P1, 1)); bg.addColorStop(1, rgba(P2, 1));
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 240; i++) { // 纸纤维
+      const fx = rnd() * W, fy = rnd() * H, fa = rnd() * PI, fl = 6 + rnd() * 20;
+      line(fx, fy, fx + Math.cos(fa) * fl, fy + Math.sin(fa) * fl, ink(.03), .6);
+    }
+
+    // ── 题款排版（先算位置，山势要给右侧题款让路）──
+    const RX = W - 120, LX = 120, lunarTxt = l ? l.text : `${cnNum(mo + 1)}月${cnNum(now.getDate())}日`;
+    const txtTop = l ? 204 : 172, txtBot = txtTop + ([...lunarTxt].length - 1) * 36 + 28;
+    const phase = l ? moonName(l.day) : "", phTop = txtBot + 14, phBot = l ? phTop + ([...phase].length - 1) * 19 + 15 : txtBot;
+    const sealTop = phBot + 18, SS = 54, drop = Math.max(0, sealTop + SS + 22 - 500);
+
+    // ── 画心 ──
+    x.save(); x.beginPath(); x.rect(F, F, W - F * 2, HB - F); x.clip();
+    const sky = x.createLinearGradient(0, F, 0, 470);
+    sky.addColorStop(0, rgba(sea.sky, .30)); sky.addColorStop(1, rgba(sea.sky, 0));
+    x.fillStyle = sky; x.fillRect(F, F, W - F * 2, 470);
+    // 红日
+    const sx = W / 2, sy = 328, R = 186;
+    const halo = x.createRadialGradient(sx, sy, R * .92, sx, sy, R * 1.85);
+    halo.addColorStop(0, "rgba(206,74,48,.22)"); halo.addColorStop(1, "rgba(206,74,48,0)");
+    x.fillStyle = halo; x.fillRect(F, F, W - F * 2, HB);
+    const sg = x.createLinearGradient(0, sy - R, 0, sy + R); sg.addColorStop(0, "#d24c34"); sg.addColorStop(1, "#b12f1f");
+    x.beginPath(); x.arc(sx, sy, R, 0, 7); x.fillStyle = sg; x.fill();
+    // 日期镂空在红日里
+    const dayStr = String(now.getDate());
+    let ds = 262; x.font = font(700, ds, NUM); let dm = x.measureText(dayStr);
+    if (dm.width > 286) { ds = Math.floor(ds * 286 / dm.width); x.font = font(700, ds, NUM); dm = x.measureText(dayStr); }
+    x.fillStyle = PAPER; x.textAlign = "center"; x.fillText(dayStr, sx, sy - 10 + (dm.actualBoundingBoxAscent || ds * .68) / 2); x.textAlign = "left";
+    // 雁阵
+    x.strokeStyle = ink(.78); x.lineJoin = "round";
+    for (let i = 0; i < 7; i++) {
+      const bx = 292 - i * 21 + (rnd() - .5) * 8, by = 122 + i * 12.5 + (rnd() - .5) * 7, s = 9.5 - i * .5;
+      x.lineWidth = 1.5 - i * .06; x.beginPath(); x.moveTo(bx - s, by - s * .2);
+      x.quadraticCurveTo(bx - s * .45, by - s * .8, bx, by); x.quadraticCurveTo(bx + s * .5, by - s * .85, bx + s * 1.05, by - s * .15); x.stroke();
+    }
+    // 层叠远山：棱线噪声 + 自上而下由浓到淡的墨色，层间云雾
+    const NL = 5;
+    for (let i = 0; i < NL; i++) {
+      const t = i / (NL - 1), col = mix(sea.far, sea.near, Math.pow(t, 1.15));
+      const base = 542 + t * 108, amp = 70 - t * 20, lift = 96 - t * 44; // 最高峰不超过 y≈430，不碰日期
+      const ph = [0, 1, 2, 3, 4].map(() => rnd() * 60), f0 = .0042 + rnd() * .0022, pts = [];
+      for (let px = F - 4; px <= W - F + 4; px += 3) {
+        let n = 0, a = 1, fq = f0, tot = 0;
+        for (let o = 0; o < 5; o++) { const s = Math.sin(px * fq + ph[o]); n += a * (o < 2 ? Math.pow(1 - Math.abs(s), 1.45) : s * .5 + .5); tot += a; a *= .5; fq *= 2.07; }
+        pts.push([px, base - amp * n / tot * (1 - .5 * smooth(560, 800, px)) - lift * (1 - smooth(140, 720, px)) + drop * smooth(590, 770, px) * (1 - t * .6)]);
+      }
+      const top = Math.min(...pts.map(p => p[1]));
+      const path = () => { x.beginPath(); x.moveTo(pts[0][0], HB + 20); pts.forEach(p => x.lineTo(p[0], p[1])); x.lineTo(pts[pts.length - 1][0], HB + 20); x.closePath(); };
+      path(); x.fillStyle = rgba(paperAt(base), .93); x.fill(); // 先铺纸色，挡住身后的山和太阳
+      const g = x.createLinearGradient(0, top, 0, top + 200 + t * 40);
+      g.addColorStop(0, rgba(col, .58 + .38 * t)); g.addColorStop(1, rgba(col, .05 + .12 * t));
+      x.fillStyle = g; x.fill();
+      x.save(); x.clip(); // 皴擦：沿山脊向下的淡墨笔触
+      for (let j = 3; j < pts.length - 3; j++) if (rnd() < .2) {
+        const len = 8 + rnd() * 30, dir = Math.sign(pts[j + 3][1] - pts[j - 3][1]) || 1;
+        line(pts[j][0], pts[j][1] + 1, pts[j][0] + dir * len * (.25 + rnd() * .4), pts[j][1] + len, rgba(col, .03 + rnd() * .06), .6 + rnd() * 1);
+      }
+      x.restore();
+      x.beginPath(); pts.forEach((p, j) => j ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]));
+      x.strokeStyle = rgba(col, .16 + .22 * t); x.lineWidth = 1; x.stroke();
+      for (let k = 0; k < 2; k++) { // 云雾
+        const mx = F + rnd() * (W - F * 2), my = base + 26 + rnd() * 44, rx = 190 + rnd() * 230, ry = 15 + rnd() * 16;
+        x.save(); x.translate(mx, my); x.scale(1, ry / rx);
+        const mg = x.createRadialGradient(0, 0, 0, 0, 0, rx); mg.addColorStop(0, rgba(paperAt(my), .9)); mg.addColorStop(1, rgba(paperAt(my), 0));
+        x.fillStyle = mg; x.beginPath(); x.arc(0, 0, rx, 0, 7); x.fill(); x.restore();
+      }
+    }
+    // 近坡与松林
+    const fg = [];
+    for (let px = F - 4; px <= 600; px += 3) fg.push([px, 780 - 158 * (1 - smooth(30, 540, px)) - 9 * Math.sin(px * .021 + 1) - 4 * Math.sin(px * .067)]);
+    const solid = fg.filter(p => p[1] < 708);
+    for (let i = 0; i < 40; i++) {
+      const p = solid[Math.floor(Math.pow(rnd(), 1.3) * solid.length)], h = 13 + rnd() * 22, tx = p[0], ty = p[1] + 3;
+      x.fillStyle = rgba(sea.near, .9); x.beginPath();
+      for (let k = 0; k < 3; k++) { const ay = ty - h + k * h * .2, byy = ty - h + (k + 1) * h * .36, hw = h * .12 * (k + 1.3); x.moveTo(tx, ay); x.lineTo(tx + hw, byy); x.lineTo(tx - hw, byy); x.closePath(); }
+      x.fill(); line(tx, ty - h * .3, tx, ty, rgba(sea.near, .9), 1.2);
+    }
+    x.beginPath(); x.moveTo(fg[0][0], HB + 20); fg.forEach(p => x.lineTo(p[0], p[1])); x.lineTo(fg[fg.length - 1][0], HB + 20); x.closePath();
+    const fgG = x.createLinearGradient(0, 620, 0, HB); fgG.addColorStop(0, rgba(sea.near, .96)); fgG.addColorStop(1, rgba(sea.near, .7));
+    x.fillStyle = fgG; x.fill();
+    // 画心底部渐隐入纸（留白）
+    const fade = x.createLinearGradient(0, 694, 0, HB); fade.addColorStop(0, rgba(paperAt(694), 0)); fade.addColorStop(1, rgba(paperAt(HB), 1));
+    x.fillStyle = fade; x.fillRect(F, 694, W - F * 2, HB - 694);
+    // 水纹、日影、孤舟
+    for (let i = 0; i < 16; i++) { const wx = 470 + rnd() * 340, wy = 702 + rnd() * 44, wl = 14 + rnd() * 54; line(wx, wy, wx + wl, wy, ink(.07 + rnd() * .08), 1); }
+    for (let k = 0; k < 4; k++) { const hw = 30 - k * 5 + rnd() * 6, cx = sx + 74 + (rnd() - .5) * 10; line(cx - hw, 703 + k * 7.5, cx + hw, 703 + k * 7.5, `rgba(194,59,44,${.34 - k * .07})`, 2); }
+    const bx = 668, by = 722, dark = rgba(sea.near, .92);
+    x.fillStyle = dark; x.beginPath(); x.moveTo(bx - 27, by - 5); x.quadraticCurveTo(bx, by + 8, bx + 27, by - 5); x.quadraticCurveTo(bx, by + 1.5, bx - 27, by - 5); x.fill();
+    x.fillRect(bx + 4, by - 13, 4.5, 13); x.beginPath(); x.arc(bx + 6.2, by - 16, 2.7, 0, 7); x.fill();
+    x.beginPath(); x.moveTo(bx - 1.5, by - 17); x.lineTo(bx + 14, by - 17); x.lineTo(bx + 6.2, by - 23.5); x.closePath(); x.fill();
+    line(bx + 9, by - 11, bx + 31, by + 9, dark, 1.2); line(bx - 20, by + 7, bx + 24, by + 7, ink(.2), 1);
+    // 应季飘落：雪 / 花瓣 / 落叶
+    if (sea.fall) for (let i = 0, n = sea.fall === "snow" ? 110 : sea.fall === "petal" ? 30 : 22; i < n; i++) {
+      const px = F + rnd() * (W - F * 2), py = F + rnd() * (HB - F - 40), r = rnd(), a = rnd() * PI;
+      if ((px < 160 || px > W - 170) && py < sealTop + SS + 10 || Math.hypot(px - sx, py - sy) < 130) continue; // 避开题款与日期
+      x.save(); x.translate(px, py); x.rotate(a);
+      if (sea.fall === "snow") { x.fillStyle = `rgba(255,255,255,${.7 + r * .3})`; x.beginPath(); x.arc(0, 0, .9 + r * 2.1, 0, 7); x.fill(); }
+      else if (sea.fall === "petal") { x.fillStyle = `rgba(${232 - r * 20 | 0},${150 + r * 30 | 0},${166 + r * 20 | 0},${.55 + r * .35})`; x.beginPath(); x.ellipse(0, 0, 2.6 + r * 3, 1.6 + r * 1.4, 0, 0, 7); x.fill(); }
+      else { x.fillStyle = ["rgba(196,74,40,.85)", "rgba(214,134,50,.85)", "rgba(170,56,36,.8)"][i % 3]; const s = 4 + r * 4.5; x.beginPath(); x.moveTo(-s, 0); x.quadraticCurveTo(0, -s * .62, s, 0); x.quadraticCurveTo(0, s * .62, -s, 0); x.fill(); }
+      x.restore();
+    }
+    x.restore();
+
+    // ── 题款：左「第几周」，右「月相 · 农历 · 印」──
+    vert(`第${cnNum(w.week)}周`, LX, 172, 27, 36, INK);
+    if (l) { // 月相：按农历日期画出明暗（北半球：上半月右亮，下半月左亮）
+      const p = (l.day - 1) / 29.53, k = Math.cos(p * 2 * PI), r = 12.5;
+      x.save(); x.translate(RX, 180); if (p > .5) x.scale(-1, 1);
+      x.beginPath(); x.arc(0, 0, r, 0, 7); x.fillStyle = ink(.1); x.fill();
+      x.beginPath(); x.arc(0, 0, r, -PI / 2, PI / 2); x.ellipse(0, 0, Math.max(.01, r * Math.abs(k)), r, 0, PI / 2, -PI / 2, k > 0); x.fillStyle = "#d8a13a"; x.fill();
+      x.beginPath(); x.arc(0, 0, r, 0, 7); x.strokeStyle = ink(.5); x.lineWidth = 1; x.stroke(); x.restore();
+      vert(phase, RX, phTop, 15, 19, ink(.62), 500);
+    }
+    vert(lunarTxt, RX, txtTop, 28, 36, INK);
+    const sealTxt = f && f.days === 0 && SEAL[f.name] || "工具集印"; // 节日当天换成贺词
+    x.save(); x.translate(RX, sealTop + SS / 2); x.rotate(-.045);
+    rr(-SS / 2, -SS / 2, SS, SS, 6); x.fillStyle = RED; x.fill();
+    rr(-SS / 2 + 3.5, -SS / 2 + 3.5, SS - 7, SS - 7, 3.5); x.strokeStyle = "rgba(250,245,234,.75)"; x.lineWidth = 1.1; x.stroke();
+    x.font = font(700, 18.5); x.fillStyle = PAPER; x.textAlign = "center"; x.textBaseline = "middle";
+    [[1, -1], [1, 1], [-1, -1], [-1, 1]].forEach(([dx, dy], i) => x.fillText(sealTxt[i], dx * 10.5, dy * 10.5 + 1)); // 右起竖读
+    x.restore();
+
+    // ── 刊头：公历 · 星期 · 干支 ──
+    line(M, 790.5, W / 2 - 16, 790.5, ink(.3)); line(W / 2 + 16, 790.5, W - M, 790.5, ink(.3));
+    x.save(); x.translate(W / 2, 790.5); x.rotate(PI / 4); x.fillStyle = RED; x.fillRect(-4, -4, 8, 8); x.restore();
+    const cnYear = [...String(y)].map(d => "〇一二三四五六七八九"[d]).join(""), small = font(600, 11.5, NUM);
+    text(`星期${WK[now.getDay()]}`, W / 2, 848, font(700, 44), INK, "center", 16);
+    text(EN_WEEK[now.getDay()], W / 2, 875, small, ink(.58), "center", 5);
+    text(`${cnYear}年${cnNum(mo + 1)}月`, M, 843, font(700, 22), INK, "left", 2);
+    text(`${EN_MONTH[mo]} ${y}`, M + 1, 875, small, ink(.58), "left", 3.5);
+    text(l ? `${l.year}${zodiac || ""}年` : `第 ${doy} 天`, W - M, 843, font(700, 22), INK, "right", 2);
+    text(l && zodiac ? `YEAR OF THE ${EN_ZODIAC[zodiac]}` : `DAY ${doy} OF ${total}`, W - M - 1, 875, small, ink(.58), "right", 3.5);
+    line(M, 898.5, W - M, 898.5, ink(.3));
+
+    // ── 三栏数据 ──
+    const cw = (W - M * 2) / 3, numF = font(700, 58, NUM), unitF = font(600, 22);
+    const col = (i, label, main, sub) => {
+      const cx = M + cw * (i + .5);
+      text(label, cx, 932, font(500, 14.5), ink(.58), "center", 3);
+      runs(cx, 998, main);
+      text(sub, cx, 1032, font(500, 16.5), ink(.66), "center");
+      if (i) line(M + cw * i + .5, 914, M + cw * i + .5, 1042, ink(.2));
+    };
+    col(0, w.year !== y ? `${w.year} 年周数` : "本年周数", [["第 ", unitF, INK], [String(w.week), numF, INK], [" 周", unitF, INK]], range);
+    col(1, `${y} 年进度`, [[((now - yStart) / yLen * 100).toFixed(1), numF, INK], [" %", font(600, 25, NUM), INK]], `第 ${doy} 天 · 余 ${total - doy} 天`);
+    if (f && f.days === 0) col(2, "今天是", [[f.name, font(700, 44), RED]], "节日快乐");
+    else if (f) col(2, `距${f.name}`, [[String(f.days), numF, RED], [" 天", unitF, INK]], `${md(f.date)} 周${WK[f.date.getDay()]}${f.days === 1 ? " · 明天" : ""}`);
+    else col(2, "本年天数", [[String(doy), numF, INK], [" / " + total, unitF, INK]], "一年中的第几天");
+    line(M, 1060.5, W - M, 1060.5, ink(.3));
+
+    // ── 全年点阵：一点一天，一列一周（周一在上），今天为红点 ──
+    const off = (new Date(y, 0, 1).getDay() + 6) % 7, cols = Math.ceil((total + off) / 7);
+    const pitch = Math.min(13.6, (W - M * 2) / cols), gx = (W - cols * pitch) / 2, gy = 1102;
+    const tc = Math.floor((doy - 1 + off) / 7);
+    rr(gx + tc * pitch - .5, gy - 5, pitch + 1, pitch * 7 + 10, pitch / 2); x.fillStyle = "rgba(194,59,44,.13)"; x.fill();
+    for (let m = 0; m < 12; m++) {
+      const d0 = Math.round((new Date(y, m, 1) - yStart) / DAY);
+      text(`${m + 1}月`, gx + Math.floor((d0 + off) / 7) * pitch + 1, 1088, font(500, 12), m === mo ? RED : ink(.55));
+    }
+    for (let d = 0; d < total; d++) {
+      const cx = gx + (Math.floor((d + off) / 7) + .5) * pitch, cy = gy + ((d + off) % 7 + .5) * pitch;
+      x.beginPath();
+      if (d < doy - 1) { x.arc(cx, cy, 4.1, 0, 7); x.fillStyle = ink(.8); x.fill(); }
+      else if (d === doy - 1) { x.arc(cx, cy, 5.2, 0, 7); x.fillStyle = RED; x.fill(); }
+      else { x.arc(cx, cy, 3.6, 0, 7); x.strokeStyle = ink(.32); x.lineWidth = 1; x.stroke(); }
+    }
+
+    // ── 页脚与边框 ──
+    line(M, 1216.5, W - M, 1216.5, ink(.3));
+    x.save(); x.translate(M, 1228); x.scale(19 / 24, 19 / 24); x.strokeStyle = INK; x.lineWidth = 2; x.lineJoin = "round";
+    for (const m of TB.I.box.matchAll(/d="([^"]+)"/g)) x.stroke(new Path2D(m[1]));
+    x.restore();
+    text("在线工具集", M + 27, 1244, font(700, 16), INK, "left", 2);
+    text(`UNIX ${Math.floor(now / 1000)} · ${tz}`, W - M, 1243, font(500, 12.5, MONO), ink(.55), "right");
+    x.strokeStyle = ink(.85); x.lineWidth = 1.5; x.strokeRect(30, 30, W - 60, H - 60);
+    x.strokeStyle = ink(.3); x.lineWidth = 1; x.strokeRect(37.5, 37.5, W - 75, H - 75);
+    return c;
+  }
+  async function snap(e) {
+    const btn = e.currentTarget; btn.setAttribute("aria-busy", "true");
+    const name = `今日概览-${key}.png`;
+    const blob = new Promise((ok, bad) => drawCard().toBlob(b => b ? ok(b) : bad(new Error("toBlob")), "image/png"));
+    try {
+      // ClipboardItem 需在点击当下同步创建（Safari），内容可以是 Promise
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      TB.toast("已复制卡片图片，可直接粘贴");
+    } catch {
+      try { TB.download(await blob, name); TB.toast("此浏览器不支持复制图片，已保存为 PNG"); }
+      catch { TB.toast("生成图片失败", "err"); }
+    } finally { btn.removeAttribute("aria-busy"); }
+  }
+  render();
+  const loop = () => { tick(); setTimeout(loop, 1000 - Date.now() % 1000 + 5); };
+  setTimeout(loop, 1000 - Date.now() % 1000 + 5);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
+})();
 </script>
 </body>
 </html>
